@@ -80,19 +80,19 @@ class GxCertCacheManager {
     if (!refresh && address in this.groupsToBelongTo) {
       return this.groupsToBelongTo[address];
     }
-    const groups = await this.client.getGroups(address);
-    this.groupsToBelongTo[address] = groups;
-    dispatch({
-      type: "UPDATE_GROUPS_TO_BELONG_TO_CACHE",
-      payload: this.groupsToBelongTo,
-    });
+    const groupIds = await this.client.getGroupIds(address);
+    const groups = [];
+    for (const groupId of groupIds) {
+      const group = await this.getGroup(groupId, ()=>{}, refresh);
+      groups.push(group);
+    }
     return groups;
   }
   async getGroup(groupId, dispatch, refresh) {
     if (!refresh && groupId in this.groups) {
       return this.groups[groupId];
     }
-    const group = await this.getGroup(groupId);
+    const group = await this.client.getGroup(groupId);
     this.groups[groupId] = group;
     dispatch({
       type: "UPDATE_GROUP_CACHE",
