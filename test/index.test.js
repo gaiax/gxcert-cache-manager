@@ -45,6 +45,23 @@ let validGroup = {
   phone: "phone",
   member: alice.address,
 }
+let validCert = {
+  context: {},
+  title: "title",
+  description: "description",
+  image: "QmYRBkuxi46tLdFrALkAm1qYztBfNQGKRsQK5UsT9dEMaW",
+  groupId: null,
+}
+console.log(validCert);
+let validUserCert = {
+  certId: null,
+  from: alice.address,
+  to: bob.address,
+}
+
+let groupId;
+let certId;
+let userCertId;
 
 function nullFunc() {};
 
@@ -75,7 +92,7 @@ describe("GxCertCacheManager", () => {
     });
     it ("cache", async function() {
       const manager = new GxCertCacheManager(client);
-      const profile = await manager.getProfile(alice.address, nullFunc, true, ["image"]);
+      const profile = await manager.getProfile(alice.address, nullFunc, true, ["profileImage"]);
       const newProfile = {
         name: "newName",
         email: "new@example.com",
@@ -83,13 +100,13 @@ describe("GxCertCacheManager", () => {
       }
       const signedProfile = await client.signProfileForUpdating(newProfile, { privateKey: alice.privateKey });
       await writer.updateProfile(charlie.address, signedProfile);
-      let _profile = await manager.getProfile(alice.address, nullFunc, false, ["image"]);
+      let _profile = await manager.getProfile(alice.address, nullFunc, false, ["profileImage"]);
       assert.equal(_profile.name, profile.name);
       assert.equal(_profile.email, profile.email);
       assert.equal(_profile.icon, profile.icon);
       assert.equal(_profile.imageUrl, profile.imageUrl);
 
-      _profile = await manager.getProfile(alice.address, nullFunc, true, ["image"]);
+      _profile = await manager.getProfile(alice.address, nullFunc, true, ["profileImage"]);
 
       assert.equal(_profile.name, newProfile.name);
       assert.equal(_profile.email, newProfile.email);
@@ -101,7 +118,6 @@ describe("GxCertCacheManager", () => {
   describe("getGroups", () => {
     const manager = new GxCertCacheManager(client);
     let newGroup;
-    let groupId;
     it ("create group", async function() {
       await writer.createGroup(charlie.address, validGroup);      
     });
@@ -117,6 +133,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(group.members[0].address, alice.address);
       assert.equal(group.members[0].icon, validProfile.icon);
       groupId = group.groupId;
+      validCert.groupId = groupId;
     });
     it ("update group", async function() {
       newGroup = {
@@ -166,6 +183,62 @@ describe("GxCertCacheManager", () => {
       assert.equal(group.members[0].name, validProfile.name);
       assert.equal(group.members[0].address, alice.address);
       assert.equal(group.members[0].icon, validProfile.icon);
+    });
+  });
+  describe("getIssuedUserCerts", () => {
+    const manager = new GxCertCacheManager(client);
+    it ("create cert", async function() {
+      const signedCert = await client.signCertificate(validCert, { privateKey: alice.privateKey });
+      await writer.createCert(charlie.address, signedCert);
+      const certs = await client.getGroupCerts(groupId);
+      assert.equal(certs.length, 1);
+      certId = certs[0].certId;
+      validUserCert.certId = certId;
+    });
+    it ("create", async function() {
+      const signedUserCert = await client.signUserCertificate(validUserCert, { privateKey: alice.privateKey });
+      await writer.createUserCert(charlie.address, signedUserCert);
+    });
+
+    it ("get issued user certs", async function() {
+      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, true, []);
+      assert.equal(userCerts.length, 1);
+
+      const userCert = userCerts[0];
+      assert.equal(userCert.certId, validUserCert.certId);
+      assert.equal(userCert.from, validUserCert.from);
+      assert.equal(userCert.to, validUserCert.to);
+      assert.equal(userCert.certificate, undefined);
+
+      userCertId = userCert.userCertId;
+    });
+    it ("get issued user certs with certificate", async function() {
+      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, true, ["certificate"]);
+      assert.equal(userCerts.length, 1);
+
+      const userCert = userCerts[0];
+      assert.equal(userCert.certId, validUserCert.certId);
+      assert.equal(userCert.from, validUserCert.from);
+      assert.equal(userCert.to, validUserCert.to);
+      assert.equal(userCert.certificate.certId, validUserCert.certId);
+      assert.equal(userCert.certificate.title, validCert.title);
+      assert.equal(userCert.certificate.description, validCert.description);
+      assert.equal(userCert.certificate.image, validCert.image);
+      assert.equal(userCert.certificate.imageUrl, undefined);
+    });
+    it ("get issued user certs with certificate image", async function() {
+      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, true, ["certificate", "certificateImage"]);
+      assert.equal(userCerts.length, 1);
+
+      const userCert = userCerts[0];
+      assert.equal(userCert.certId, validUserCert.certId);
+      assert.equal(userCert.from, validUserCert.from);
+      assert.equal(userCert.to, validUserCert.to);
+      assert.equal(userCert.certificate.certId, validUserCert.certId);
+      assert.equal(userCert.certificate.title, validCert.title);
+      assert.equal(userCert.certificate.description, validCert.description);
+      assert.equal(userCert.certificate.image, validCert.image);
+      assert.equal(userCert.certificate.imageUrl, "");
     });
   });
 });
