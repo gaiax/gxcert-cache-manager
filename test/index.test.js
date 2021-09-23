@@ -100,6 +100,7 @@ describe("GxCertCacheManager", () => {
   });
   describe("getGroups", () => {
     const manager = new GxCertCacheManager(client);
+    let newGroup;
     let groupId;
     it ("create group", async function() {
       await writer.createGroup(charlie.address, validGroup);      
@@ -117,8 +118,8 @@ describe("GxCertCacheManager", () => {
       assert.equal(group.members[0].icon, validProfile.icon);
       groupId = group.groupId;
     });
-    it ("don't refresh", async function() {
-      const newGroup = {
+    it ("update group", async function() {
+      newGroup = {
         groupId,
         name: "newGroup",
         residence: "newResidence",
@@ -126,10 +127,12 @@ describe("GxCertCacheManager", () => {
       };
       const signedGroup = await client.signGroup(newGroup, { privateKey: alice.privateKey });
       await writer.updateGroup(charlie.address, signedGroup);
-
+    });
+    it ("don't refresh(getGroups)", async function() {
       const groups = await manager.getGroups(alice.address, nullFunc, false);
 
       assert.equal(groups.length, 1);
+
       const group = groups[0];
       assert.equal(group.name, validGroup.name);
       assert.equal(group.residence, validGroup.residence);
@@ -146,6 +149,16 @@ describe("GxCertCacheManager", () => {
 
       assert.equal(groups.length, 1);
       const group = groups[0];
+      assert.equal(group.name, validGroup.name);
+      assert.equal(group.residence, validGroup.residence);
+      assert.equal(group.phone, validGroup.phone);
+      assert.equal(group.members.length, 1);
+      assert.equal(group.members[0].name, validProfile.name);
+      assert.equal(group.members[0].address, alice.address);
+      assert.equal(group.members[0].icon, validProfile.icon);
+    });
+    it ("getGroup don't refresh", async function() {
+      const group = await manager.getGroup(groupId, nullFunc, false);
       assert.equal(group.name, validGroup.name);
       assert.equal(group.residence, validGroup.residence);
       assert.equal(group.phone, validGroup.phone);
