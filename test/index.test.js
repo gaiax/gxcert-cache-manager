@@ -33,10 +33,17 @@ const writer = new GxCertWriter(web3, contractAddress, privateKey, common);
 const client = new GxCertClient(web3, contractAddress);
 
 
-const validProfile = {
+let validProfile = {
   name: "alice",
   email: "alice@example.com",
   icon: "QmYRBkuxi46tLdFrALkAm1qYztBfNQGKRsQK5UsT9dEMaW",
+}
+
+let validGroup = {
+  name: "group1",
+  residence: "residence",
+  phone: "phone",
+  member: alice.address,
 }
 
 function nullFunc() {};
@@ -88,6 +95,64 @@ describe("GxCertCacheManager", () => {
       assert.equal(_profile.email, newProfile.email);
       assert.equal(_profile.icon, newProfile.icon);
       assert.equal(_profile.imageUrl, "");
+      validProfile = _profile;
+    });
+  });
+  describe("getGroups", () => {
+    const manager = new GxCertCacheManager(client);
+    let groupId;
+    it ("create group", async function() {
+      await writer.createGroup(charlie.address, validGroup);      
+    });
+    it ("get", async function() {
+      const groups = await manager.getGroups(alice.address, nullFunc, false);
+      assert.equal(groups.length, 1);
+      const group = groups[0];
+      assert.equal(group.name, validGroup.name);
+      assert.equal(group.residence, validGroup.residence);
+      assert.equal(group.phone, validGroup.phone);
+      assert.equal(group.members.length, 1);
+      assert.equal(group.members[0].name, validProfile.name);
+      assert.equal(group.members[0].address, alice.address);
+      assert.equal(group.members[0].icon, validProfile.icon);
+      groupId = group.groupId;
+    });
+    it ("don't refresh", async function() {
+      const newGroup = {
+        groupId,
+        name: "newGroup",
+        residence: "newResidence",
+        phone: "newPhone",
+      };
+      const signedGroup = await client.signGroup(newGroup, { privateKey: alice.privateKey });
+      await writer.updateGroup(charlie.address, signedGroup);
+
+      const groups = await manager.getGroups(alice.address, nullFunc, false);
+
+      assert.equal(groups.length, 1);
+      const group = groups[0];
+      assert.equal(group.name, validGroup.name);
+      assert.equal(group.residence, validGroup.residence);
+      assert.equal(group.phone, validGroup.phone);
+      assert.equal(group.members.length, 1);
+      assert.equal(group.members[0].name, validProfile.name);
+      assert.equal(group.members[0].address, alice.address);
+      assert.equal(group.members[0].icon, validProfile.icon);
+
+      validGroup = newGroup;
+    });
+    it ("refresh", async function() {
+      const groups = await manager.getGroups(alice.address, nullFunc, true);
+
+      assert.equal(groups.length, 1);
+      const group = groups[0];
+      assert.equal(group.name, validGroup.name);
+      assert.equal(group.residence, validGroup.residence);
+      assert.equal(group.phone, validGroup.phone);
+      assert.equal(group.members.length, 1);
+      assert.equal(group.members[0].name, validProfile.name);
+      assert.equal(group.members[0].address, alice.address);
+      assert.equal(group.members[0].icon, validProfile.icon);
     });
   });
 });

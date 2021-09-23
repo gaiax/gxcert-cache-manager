@@ -80,7 +80,7 @@ class GxCertCacheManager {
     if (!refresh && address in this.groupsToBelongTo) {
       return this.groupsToBelongTo[address];
     }
-    const groups = await this.getGroups(address);
+    const groups = await this.client.getGroups(address);
     this.groupsToBelongTo[address] = groups;
     dispatch({
       type: "UPDATE_GROUPS_TO_BELONG_TO_CACHE",
