@@ -76,14 +76,14 @@ describe("GxCertCacheManager", () => {
       await writer.createProfile(charlie.address, alice.address, signedProfile);
     });
     it ("without image", async function() {
-      const manager = new GxCertCacheManager(client);
+      const manager = new GxCertCacheManager([client]);
       const profile = await manager.getProfile(alice.address, nullFunc, true, []);
       assert.equal(profile.name, validProfile.name);
       assert.equal(profile.email, validProfile.email);
       assert.equal(profile.icon, validProfile.icon);
     });
     it ("with image", async function() {
-      const manager = new GxCertCacheManager(client);
+      const manager = new GxCertCacheManager([client]);
       const profile = await manager.getProfile(alice.address, nullFunc, true, ["profileImage"]);
       assert.equal(profile.name, validProfile.name);
       assert.equal(profile.email, validProfile.email);
@@ -91,7 +91,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(profile.imageUrl, "");
     });
     it ("cache", async function() {
-      const manager = new GxCertCacheManager(client);
+      const manager = new GxCertCacheManager([client]);
       const profile = await manager.getProfile(alice.address, nullFunc, true, ["profileImage"]);
       const newProfile = {
         name: "newName",
@@ -116,7 +116,7 @@ describe("GxCertCacheManager", () => {
     });
   });
   describe("getGroups", () => {
-    const manager = new GxCertCacheManager(client);
+      const manager = new GxCertCacheManager([client]);
     let newGroup;
     it ("create group", async function() {
       await writer.createGroup(charlie.address, validGroup);      
@@ -186,7 +186,7 @@ describe("GxCertCacheManager", () => {
     });
   });
   describe("get user certs", () => {
-    const manager = new GxCertCacheManager(client);
+      const manager = new GxCertCacheManager([client]);
     it ("create cert", async function() {
       const signedCert = await client.signCertificate(validCert, { privateKey: alice.privateKey });
       await writer.createCert(charlie.address, signedCert);

@@ -2,8 +2,9 @@
 const { getImageOnIpfs, createImageUrlFromUint8Array } = require("./ipfs");
 
 class GxCertCacheManager {
-  constructor(client) {
-    this.client = client;
+  constructor(clients) {
+    this.clients = clients;
+    this.client = clients[0];
     this.profiles = {};
     this.certIdToUserCerts = {};
     this.addressToUserCerts = {};
@@ -13,7 +14,11 @@ class GxCertCacheManager {
     this.certificates = {};
     this.images = {};
   }
-  async getProfile(address, dispatch, refresh, depth) {
+  setMainClient(client) {
+    this.clients[0] = client;
+    this.client = client;
+  }
+  async getProfile(address, dispatch, refresh, depth, clientIndex) {
     if (!refresh && address in this.profiles) {
       const profile = this.profiles[address];
       if (profile.icon in this.profiles) {
@@ -21,7 +26,12 @@ class GxCertCacheManager {
       }
       return profile;
     }
-    const profile = await this.client.getProfile(address);
+    let profile;
+    if (clientIndex) {
+      profile = await this.clients[clientIndex].getProfile(address);
+    } else {
+      profile = await this.client.getProfile(address);
+    }
     this.profiles[address] = profile;
     if (depth.includes("profileImage")) {
       let imageUrl;
@@ -44,7 +54,7 @@ class GxCertCacheManager {
     });
     return profile;
   }
-  async getReceivedUserCerts(address, dispatch, refresh, depth) {
+  async getReceivedUserCerts(address, dispatch, refresh, depth, clientIndex) {
     if (!refresh && address in this.addressToUserCerts) {
       let userCerts = this.addressToUserCerts[address];
       userCerts = userCerts.map(userCert => {
@@ -60,7 +70,12 @@ class GxCertCacheManager {
       });
       return userCerts;
     }
-    let userCerts = await this.client.getReceivedUserCerts(address);
+    let userCerts;
+    if (clientIndex) {
+      userCerts = await this.clients[clientIndex].getReceivedUserCerts(address);
+    } else {
+      userCerts = await this.client.getReceivedUserCerts(address);
+    }
     for (const userCert of userCerts) {
       if (!(userCert.userCertId in this.userCerts)) {
         this.userCerts[userCert.userCertId] = userCert;
@@ -71,7 +86,7 @@ class GxCertCacheManager {
       const _userCerts = [];
       for (const userCert of userCerts) {
         const _userCert = { ...userCert };
-        const cert = await this.getCert(userCert.certId, dispatch, refresh, depth);
+        const cert = await this.getCert(userCert.certId, dispatch, refresh, depth, clientIndex);
         _userCert.certificate = cert;
         _userCerts.push(_userCert);
       }
@@ -87,7 +102,7 @@ class GxCertCacheManager {
     });
     return userCerts;
   }
-  async getIssuedUserCerts(certId, dispatch, refresh, depth) {
+  async getIssuedUserCerts(certId, dispatch, refresh, depth, clientIndex) {
     if (!refresh && certId in this.certIdToUserCerts) {
       let userCerts = this.certIdToUserCerts[certId];
       userCerts = userCerts.map(userCert => {
@@ -103,7 +118,12 @@ class GxCertCacheManager {
       });
       return userCerts;
     }
-    let userCerts = await this.client.getIssuedUserCerts(certId);
+    let userCerts;
+    if (clientIndex) {
+      userCerts = await this.clients[clientIndex].getIssuedUserCerts(certId);
+    } else {
+      userCerts = await this.client.getIssuedUserCerts(certId);
+    }
     for (const userCert of userCerts) {
       if (!(userCert.userCertId in this.userCerts)) {
         this.userCerts[userCert.userCertId] = userCert;
@@ -130,14 +150,19 @@ class GxCertCacheManager {
     });
     return userCerts;
   }
-  async getGroups(address, dispatch, refresh) {
+  async getGroups(address, dispatch, refresh, clientIndex) {
     if (!refresh && address in this.groupsToBelongTo) {
       return this.groupsToBelongTo[address];
     }
-    const groupIds = await this.client.getGroupIds(address);
+    let groupIds;
+    if (clientIndex) {
+      groupIds = await this.clients[clientIndex].getGroupIds(address);
+    } else {
+      groupIds = await this.client.getGroupIds(address);
+    }
     const groups = [];
     for (const groupId of groupIds) {
-      const group = await this.getGroup(groupId, ()=>{}, refresh);
+      const group = await this.getGroup(groupId, ()=>{}, refresh, clientIndex);
       groups.push(group);
     }
     this.groupsToBelongTo[address] = groups;
@@ -147,11 +172,16 @@ class GxCertCacheManager {
     });
     return groups;
   }
-  async getGroup(groupId, dispatch, refresh) {
+  async getGroup(groupId, dispatch, refresh, clientIndex) {
     if (!refresh && groupId in this.groups) {
       return this.groups[groupId];
     }
-    const group = await this.client.getGroup(groupId);
+    let group;
+    if (clientIndex) {
+      group = await this.clients[clientIndex].getGroup(groupId);
+    } else {
+      group = await this.client.getGroup(groupId);
+    }
     this.groups[groupId] = group;
     dispatch({
       type: "UPDATE_GROUP_CACHE",
@@ -159,7 +189,7 @@ class GxCertCacheManager {
     });
     return group;
   }
-  async getUserCert(userCertId, dispatch, refresh, depth) {
+  async getUserCert(userCertId, dispatch, refresh, depth, clientIndex) {
     if (!refresh && userCertId in this.userCerts) {
       const userCert = this.userCerts[userCertId];
       if (userCert.certId in this.certificates) {
@@ -172,7 +202,12 @@ class GxCertCacheManager {
       }
       return userCert;
     }
-    const userCert = await this.client.getUserCert(userCertId);
+    let userCert;
+    if (clientIndex) {
+      userCert = await this.clients[clientIndex].getUserCert(userCertId);
+    } else {
+      userCert = await this.client.getUserCert(userCertId);
+    }
     this.userCerts[userCertId] = userCert;
     dispatch({
       type: "UPDATE_USER_CERT_CACHE",
@@ -183,11 +218,16 @@ class GxCertCacheManager {
     }
     return userCert;
   }
-  async getCert(certId, dispatch, refresh, depth) {
+  async getCert(certId, dispatch, refresh, depth, clientIndex) {
     if (!refresh && certId in this.certificates) {
       return this.certificates[certId];
     }
-    const cert = await this.client.getCert(certId);
+    let cert;
+    if (clientIndex) {
+      cert = await this.clients[clientIndex].getCert(certId);
+    } else {
+      cert = await this.client.getCert(certId);
+    }
     this.certificates[certId] = cert;
     if (depth.includes("certificateImage")) {
       try {
