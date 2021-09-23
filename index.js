@@ -10,17 +10,23 @@ class GxCertCacheManager {
     this.groups = {};
     this.groupsToBelongTo = {};
     this.certificates = {};
+    this.images = {};
   }
   async getProfile(address, dispatch, refresh, depth) {
     if (!refresh && address in this.profiles) {
       return this.profiles[address];
     }
     const profile = await this.client.getProfile(address);
-    if (depth.includes("image")) {
+    if (depth.includes("profileImage")) {
       let imageUrl;
       try {
         imageUrl = await getImageOnIpfs(profile.icon);
         profile.imageUrl = imageUrl;
+        this.images[profile.icon] = imageUrl;
+        dispatch({
+          type: "UPDATE_IMAGE_CACHE",
+          payload: this.images,
+        });
       } catch(err) {
         console.error(err);
         profile.imageUrl = "";
@@ -42,20 +48,8 @@ class GxCertCacheManager {
       const _userCerts = [];
       for (const userCert of userCerts) {
         const _userCert = { ...userCert };
-        if (!refresh && userCert.certId in this.certificates) {
-          _userCert.certificate = this.certificates[userCert.certId];
-        } else {
-          const cert = await this.client.getCert(userCert.certId);
-          _userCert.certificate = cert;
-        }
-        if ("certificateImage" in depth) {
-          try {
-            const imageUrl = await getImageOnIpfs(_userCert.certificate.image);
-            _userCert.certificate.imageUrl = imageUrl;
-          } catch(err) {
-            console.error(err);
-          }
-        }
+        const cert = await this.getCert(userCert.certId, dispatch, refresh, depth);
+        _userCerts.certificate = cert;
         _userCerts.push(_userCert);
       }
       userCerts = _userCerts;
@@ -99,6 +93,26 @@ class GxCertCacheManager {
       payload: this.groups,
     });
     return group;
+  }
+  async getCert(certId, dispatch, refresh, depth) {
+    if (!refresh && certId in this.certificates) {
+      return this.certificates[certId];
+    }
+    const cert = await this.client.getCert(certId);
+    if (depth.includes("certificateImage")) {
+      try {
+        const imageUrl = await getImageOnIpfs(cert.image);
+        cert.imageUrl = imageUrl;
+        this.images[cert.image] = imageUrl;
+        dispatch({
+          type: "UPDATE_IMAGE_CACHE",
+          payload: this.images,
+        });
+      } catch(err) {
+        console.error(err);
+      }
+    }
+    return cert;
   }
 
 }

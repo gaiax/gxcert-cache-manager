@@ -67,7 +67,7 @@ describe("GxCertCacheManager", () => {
     });
     it ("with image", async function() {
       const manager = new GxCertCacheManager(client);
-      const profile = await manager.getProfile(alice.address, nullFunc, true, ["image"]);
+      const profile = await manager.getProfile(alice.address, nullFunc, true, ["profileImage"]);
       assert.equal(profile.name, validProfile.name);
       assert.equal(profile.email, validProfile.email);
       assert.equal(profile.icon, validProfile.icon);
