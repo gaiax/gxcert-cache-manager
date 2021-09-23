@@ -304,5 +304,16 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.image, validCert.image);
       assert.equal(userCert.certificate.imageUrl, "");
     });
+    it ("get user cert(no refresh)", async function () {
+      const userCert = await manager.getUserCert(userCertId, nullFunc, false, []);
+      assert.equal(userCert.certId, validUserCert.certId);
+      assert.equal(userCert.from, validUserCert.from);
+      assert.equal(userCert.to, validUserCert.to);
+      assert.equal(userCert.certificate.certId, validUserCert.certId);
+      assert.equal(userCert.certificate.title, validCert.title);
+      assert.equal(userCert.certificate.description, validCert.description);
+      assert.equal(userCert.certificate.image, validCert.image);
+      assert.equal(userCert.certificate.imageUrl, "");
+    });
   });
 });
