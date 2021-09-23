@@ -1,7 +1,7 @@
 
 const { getImageOnIpfs, createImageUrlFromUint8Array } = require("./ipfs");
 
-class CacheManager {
+class GxCertCacheManager {
   constructor(client) {
     this.client = client;
     this.profiles = {};
@@ -16,12 +16,14 @@ class CacheManager {
       return this.profiles[address];
     }
     const profile = await this.client.getProfile(address);
-    if ("image" in depth) {
+    if (depth.includes("image")) {
+      let imageUrl;
       try {
-        const imageUrl = await getImageOnIpfs(profile.icon);
+        imageUrl = await getImageOnIpfs(profile.icon);
         profile.imageUrl = imageUrl;
       } catch(err) {
         console.error(err);
+        profile.imageUrl = "";
       }
     }
     this.profiles[address] = profile;
@@ -100,3 +102,5 @@ class CacheManager {
   }
 
 }
+
+module.exports = GxCertCacheManager;
