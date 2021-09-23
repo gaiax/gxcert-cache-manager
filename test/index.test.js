@@ -230,7 +230,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, undefined);
     });
     it ("get issued user certs with certificate image", async function() {
-      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, REFRESH_DEPTH.SHALLOW, ["certificate", "certificateImage"]);
+      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, REFRESH_DEPTH.DEEP, ["certificate", "certificateImage"]);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -278,10 +278,10 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.title, validCert.title);
       assert.equal(userCert.certificate.description, validCert.description);
       assert.equal(userCert.certificate.image, validCert.image);
-      assert.equal(userCert.certificate.imageUrl, undefined);
+      assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get received user certs with certificate image", async function() {
-      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, REFRESH_DEPTH.SHALLOW, ["certificate", "certificateImage"]);
+      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, REFRESH_DEPTH.DEEP, ["certificate", "certificateImage"]);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];

@@ -273,9 +273,7 @@ class GxCertCacheManager {
           imageUrl = "";
         }
       }
-      console.log(imageUrl);
       cert.imageUrl = imageUrl;
-      console.log(cert);
     }
     return cert;
   }
