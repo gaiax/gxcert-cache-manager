@@ -5,7 +5,10 @@ const fs = require("fs");
 const privateKey = fs.readFileSync(__dirname + "/../.privkey", "utf8").trim();
 const assert = require("assert");
 
-const GxCertCacheManager = require("../index");
+const {
+  GxCertCacheManager,
+  REFRESH_DEPTH,
+} = require("../index");
 const GxCertClient = require("gxcert-lib");
 const GxCertWriter = require("gxcert-write");
 const Web3 = require("web3");
@@ -77,14 +80,14 @@ describe("GxCertCacheManager", () => {
     });
     it ("without image", async function() {
       const manager = new GxCertCacheManager([client]);
-      const profile = await manager.getProfile(alice.address, nullFunc, true, []);
+      const profile = await manager.getProfile(alice.address, nullFunc, REFRESH_DEPTH.NO_REFRESH, []);
       assert.equal(profile.name, validProfile.name);
       assert.equal(profile.email, validProfile.email);
       assert.equal(profile.icon, validProfile.icon);
     });
     it ("with image", async function() {
       const manager = new GxCertCacheManager([client]);
-      const profile = await manager.getProfile(alice.address, nullFunc, true, ["profileImage"]);
+      const profile = await manager.getProfile(alice.address, nullFunc, REFRESH_DEPTH.SHALLOW, ["profileImage"]);
       assert.equal(profile.name, validProfile.name);
       assert.equal(profile.email, validProfile.email);
       assert.equal(profile.icon, validProfile.icon);
@@ -92,7 +95,7 @@ describe("GxCertCacheManager", () => {
     });
     it ("cache", async function() {
       const manager = new GxCertCacheManager([client]);
-      const profile = await manager.getProfile(alice.address, nullFunc, true, ["profileImage"]);
+      const profile = await manager.getProfile(alice.address, nullFunc, REFRESH_DEPTH.NO_REFRESH, ["profileImage"]);
       const newProfile = {
         name: "newName",
         email: "new@example.com",
@@ -100,13 +103,13 @@ describe("GxCertCacheManager", () => {
       }
       const signedProfile = await client.signProfileForUpdating(newProfile, { privateKey: alice.privateKey });
       await writer.updateProfile(charlie.address, signedProfile);
-      let _profile = await manager.getProfile(alice.address, nullFunc, false, []);
+      let _profile = await manager.getProfile(alice.address, nullFunc, REFRESH_DEPTH.NO_REFRESH, []);
       assert.equal(_profile.name, profile.name);
       assert.equal(_profile.email, profile.email);
       assert.equal(_profile.icon, profile.icon);
       assert.equal(_profile.imageUrl, profile.imageUrl);
 
-      _profile = await manager.getProfile(alice.address, nullFunc, true, ["profileImage"]);
+      _profile = await manager.getProfile(alice.address, nullFunc, REFRESH_DEPTH.SHALLOW, ["profileImage"]);
 
       assert.equal(_profile.name, newProfile.name);
       assert.equal(_profile.email, newProfile.email);
@@ -122,7 +125,7 @@ describe("GxCertCacheManager", () => {
       await writer.createGroup(charlie.address, validGroup);      
     });
     it ("get", async function() {
-      const groups = await manager.getGroups(alice.address, nullFunc, false);
+      const groups = await manager.getGroups(alice.address, nullFunc, REFRESH_DEPTH.NO_REFRESH);
       assert.equal(groups.length, 1);
       const group = groups[0];
       assert.equal(group.name, validGroup.name);
@@ -146,7 +149,7 @@ describe("GxCertCacheManager", () => {
       await writer.updateGroup(charlie.address, signedGroup);
     });
     it ("don't refresh(getGroups)", async function() {
-      const groups = await manager.getGroups(alice.address, nullFunc, false);
+      const groups = await manager.getGroups(alice.address, nullFunc, REFRESH_DEPTH.NO_REFRESH);
 
       assert.equal(groups.length, 1);
 
@@ -162,7 +165,7 @@ describe("GxCertCacheManager", () => {
       validGroup = newGroup;
     });
     it ("refresh", async function() {
-      const groups = await manager.getGroups(alice.address, nullFunc, true);
+      const groups = await manager.getGroups(alice.address, nullFunc, REFRESH_DEPTH.SHALLOW);
 
       assert.equal(groups.length, 1);
       const group = groups[0];
@@ -174,8 +177,8 @@ describe("GxCertCacheManager", () => {
       assert.equal(group.members[0].address, alice.address);
       assert.equal(group.members[0].icon, validProfile.icon);
     });
-    it ("getGroup don't refresh", async function() {
-      const group = await manager.getGroup(groupId, nullFunc, false);
+    it ("getGroup (no refresh)", async function() {
+      const group = await manager.getGroup(groupId, nullFunc, REFRESH_DEPTH.NO_REFRESH);
       assert.equal(group.name, validGroup.name);
       assert.equal(group.residence, validGroup.residence);
       assert.equal(group.phone, validGroup.phone);
@@ -201,7 +204,7 @@ describe("GxCertCacheManager", () => {
     });
 
     it ("get issued user certs", async function() {
-      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, true, []);
+      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, REFRESH_DEPTH.SHALLOW, []);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -213,7 +216,7 @@ describe("GxCertCacheManager", () => {
       userCertId = userCert.userCertId;
     });
     it ("get issued user certs with certificate", async function() {
-      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, true, ["certificate"]);
+      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, REFRESH_DEPTH.SHALLOW, ["certificate"]);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -227,7 +230,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, undefined);
     });
     it ("get issued user certs with certificate image", async function() {
-      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, true, ["certificate", "certificateImage"]);
+      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, REFRESH_DEPTH.SHALLOW, ["certificate", "certificateImage"]);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -241,7 +244,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get issued user certs(no refresh)", async function() {
-      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, false, []);
+      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, REFRESH_DEPTH.NO_REFRESH, []);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -255,7 +258,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get received user certs", async function() {
-      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, true, []);
+      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, REFRESH_DEPTH.SHALLOW, []);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -265,7 +268,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate, undefined);
     });
     it ("get received user certs with certificate", async function() {
-      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, true, ["certificate"]);
+      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, REFRESH_DEPTH.SHALLOW, ["certificate"]);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -278,7 +281,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, undefined);
     });
     it ("get received user certs with certificate image", async function() {
-      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, true, ["certificate", "certificateImage"]);
+      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, REFRESH_DEPTH.SHALLOW, ["certificate", "certificateImage"]);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -291,7 +294,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get received user certs(no refresh)", async function() {
-      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, false, []);
+      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, REFRESH_DEPTH.NO_REFRESH, []);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -305,7 +308,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get user cert(no refresh)", async function () {
-      const userCert = await manager.getUserCert(userCertId, nullFunc, false, []);
+      const userCert = await manager.getUserCert(userCertId, nullFunc, REFRESH_DEPTH.NO_REFRESH, []);
       assert.equal(userCert.certId, validUserCert.certId);
       assert.equal(userCert.from, validUserCert.from);
       assert.equal(userCert.to, validUserCert.to);
