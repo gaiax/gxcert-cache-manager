@@ -140,6 +140,11 @@ class GxCertCacheManager {
       const group = await this.getGroup(groupId, ()=>{}, refresh);
       groups.push(group);
     }
+    this.groupsToBelongTo[address] = groups;
+    dispatch({
+      type: "UPDATE_GROUPS_CACHE",
+      payload: this.groupsToBelongTo,
+    });
     return groups;
   }
   async getGroup(groupId, dispatch, refresh) {
@@ -153,6 +158,30 @@ class GxCertCacheManager {
       payload: this.groups,
     });
     return group;
+  }
+  async getUserCert(userCertId, dispatch, refresh, depth) {
+    if (!refresh && userCertId in this.userCerts) {
+      const userCert = this.userCerts[userCertId];
+      if (userCert.certId in this.certificates) {
+        const certificate = this.certificates[userCert.certId];
+        if (certificate.image in this.images) {
+          const imageUrl = this.images[certificate.image];
+          certificate.imageUrl = imageUrl;
+        }
+        userCert.certificate = certificate;
+      }
+      return userCert;
+    }
+    const userCert = await this.client.getUserCert(userCertId);
+    this.userCerts[userCertId] = userCert;
+    dispatch({
+      type: "UPDATE_USER_CERT_CACHE",
+      payload: this.userCerts,
+    });
+    if (depth.includes("certificate")) {
+      userCert.certificate = this.getCert(userCert.certId, dispatch, refresh, depth);
+    }
+    return userCert;
   }
   async getCert(certId, dispatch, refresh, depth) {
     if (!refresh && certId in this.certificates) {
