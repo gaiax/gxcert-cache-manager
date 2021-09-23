@@ -185,7 +185,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(group.members[0].icon, validProfile.icon);
     });
   });
-  describe("getIssuedUserCerts", () => {
+  describe("get user certs", () => {
     const manager = new GxCertCacheManager(client);
     it ("create cert", async function() {
       const signedCert = await client.signCertificate(validCert, { privateKey: alice.privateKey });
@@ -235,6 +235,42 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.from, validUserCert.from);
       assert.equal(userCert.to, validUserCert.to);
       assert.equal(userCert.certificate.certId, validUserCert.certId);
+      assert.equal(userCert.certificate.title, validCert.title);
+      assert.equal(userCert.certificate.description, validCert.description);
+      assert.equal(userCert.certificate.image, validCert.image);
+      assert.equal(userCert.certificate.imageUrl, "");
+    });
+    it ("get received user certs", async function() {
+      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, true, []);
+      assert.equal(userCerts.length, 1);
+
+      const userCert = userCerts[0];
+      assert.equal(userCert.certId, validUserCert.certId);
+      assert.equal(userCert.from, validUserCert.from);
+      assert.equal(userCert.to, validUserCert.to);
+      assert.equal(userCert.certificate, undefined);
+    });
+    it ("get received user certs with certificate", async function() {
+      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, true, ["certificate"]);
+      assert.equal(userCerts.length, 1);
+
+      const userCert = userCerts[0];
+      assert.equal(userCert.certId, validUserCert.certId);
+      assert.equal(userCert.from, validUserCert.from);
+      assert.equal(userCert.to, validUserCert.to);
+      assert.equal(userCert.certificate.title, validCert.title);
+      assert.equal(userCert.certificate.description, validCert.description);
+      assert.equal(userCert.certificate.image, validCert.image);
+      assert.equal(userCert.certificate.imageUrl, undefined);
+    });
+    it ("get received user certs with certificate image", async function() {
+      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, true, ["certificate", "certificateImage"]);
+      assert.equal(userCerts.length, 1);
+
+      const userCert = userCerts[0];
+      assert.equal(userCert.certId, validUserCert.certId);
+      assert.equal(userCert.from, validUserCert.from);
+      assert.equal(userCert.to, validUserCert.to);
       assert.equal(userCert.certificate.title, validCert.title);
       assert.equal(userCert.certificate.description, validCert.description);
       assert.equal(userCert.certificate.image, validCert.image);

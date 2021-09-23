@@ -6,6 +6,7 @@ class GxCertCacheManager {
     this.client = client;
     this.profiles = {};
     this.certIdToUserCerts = {};
+    this.addressToUserCerts = {};
     this.userCerts = {};
     this.groups = {};
     this.groupsToBelongTo = {};
@@ -38,6 +39,37 @@ class GxCertCacheManager {
       payload: this.profiles,
     });
     return profile;
+  }
+  async getReceivedUserCerts(address, dispatch, refresh, depth) {
+    if (!refresh && address in this.addressToUserCerts) {
+      return this.addressToUserCerts[address];
+    }
+    let userCerts = await this.client.getReceivedUserCerts(address);
+    for (const userCert of userCerts) {
+      if (!(userCert.userCertId in this.userCerts)) {
+        this.userCerts[userCert.userCertId] = userCert;
+      }
+    }
+    this.addressToUserCerts[address] = userCerts;
+    if (depth.includes("certificate")) {
+      const _userCerts = [];
+      for (const userCert of userCerts) {
+        const _userCert = { ...userCert };
+        const cert = await this.getCert(userCert.certId, dispatch, refresh, depth);
+        _userCert.certificate = cert;
+        _userCerts.push(_userCert);
+      }
+      userCerts = _userCerts;
+    }
+    dispatch({
+      type: "UPDATE_USER_CERT_CACHE",
+      payload: this.userCerts,
+    });
+    dispatch({
+      type: "UPDATE_RECEIVED_USER_CERT_CACHE",
+      payload: this.addressToUserCerts,
+    });
+    return userCerts;
   }
   async getIssuedUserCerts(certId, dispatch, refresh, depth) {
     if (!refresh && certId in this.certIdToUserCerts) {
