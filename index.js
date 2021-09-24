@@ -36,7 +36,7 @@ class GxCertCacheManager {
     }
     this.profiles[address] = profile;
     if (depth.includes("profileImage")) {
-      profile.imageUrl = await this.getImage(profile.icon);
+      profile.imageUrl = await this.getImage(profile.icon, dispatch);
     }
     dispatch({
       type: "UPDATE_PROFILE_CACHE",
@@ -160,7 +160,7 @@ class GxCertCacheManager {
     }
     if (depth.includes("certificateImage")) {
       for (let i = 0; i < certs.length; i++) {
-        certs[i].imageUrl = await this.getImage(certs[i].image);
+        certs[i].imageUrl = await this.getImage(certs[i].image, dispatch);
       }
     }
     return certs;
@@ -257,7 +257,7 @@ class GxCertCacheManager {
     }
     this.certificates[certId] = cert;
     if (depth.includes("certificateImage")) {
-      cert.imageUrl = await this.getImage(cert.image);
+      cert.imageUrl = await this.getImage(cert.image, dispatch);
     }
     if (depth.includes("group")) {
       let group;
