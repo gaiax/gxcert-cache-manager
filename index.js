@@ -164,6 +164,16 @@ class GxCertCacheManager {
         certs[i].imageUrl = await this.getImage(certs[i].image, dispatch);
       }
     }
+    if (depth.includes("issuedUserCert")) {
+      let newDepth = [...depth];
+      newDepth = newDepth.filter(d => {
+        return d !== "certificate"
+      });
+      for (let i = 0; i < certs.length; i++) {
+        const userCerts = await this.getIssuedUserCerts(
+
+      }
+    }
     return certs;
   }
   async getGroups(address, dispatch, refresh, clientIndex) {
