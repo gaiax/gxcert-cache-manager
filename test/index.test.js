@@ -52,7 +52,7 @@ let validCert = {
   context: {},
   title: "title",
   description: "description",
-  image: "QmYRBkuxi46tLdFrALkAm1qYztBfNQGKRsQK5UsT9dEMaW",
+  image: "QmYBSzzk3shgGcos5SnTDaJRh3ZvV8rnwSbGPmsrnWDjVH",
   groupId: null,
 }
 console.log(validCert);
@@ -230,7 +230,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, undefined);
     });
     it ("get issued user certs with certificate image", async function() {
-      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, REFRESH_DEPTH.DEEP, ["certificate", "certificateImage"]);
+      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, REFRESH_DEPTH.SHALLOW, ["certificate", "certificateImage"]);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -244,7 +244,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get issued user certs(no refresh)", async function() {
-      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, REFRESH_DEPTH.NO_REFRESH, []);
+      const userCerts = await manager.getIssuedUserCerts(certId, nullFunc, REFRESH_DEPTH.NO_REFRESH, ["certificate", "certificateImage"]);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -281,7 +281,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get received user certs with certificate image", async function() {
-      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, REFRESH_DEPTH.DEEP, ["certificate", "certificateImage"]);
+      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, REFRESH_DEPTH.SHALLOW, ["certificate", "certificateImage"]);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -294,7 +294,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get received user certs(no refresh)", async function() {
-      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, REFRESH_DEPTH.NO_REFRESH, []);
+      const userCerts = await manager.getReceivedUserCerts(bob.address, nullFunc, REFRESH_DEPTH.NO_REFRESH, ["certificate", "certificateImage"]);
       assert.equal(userCerts.length, 1);
 
       const userCert = userCerts[0];
@@ -308,7 +308,8 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get user cert(no refresh)", async function () {
-      const userCert = await manager.getUserCert(userCertId, nullFunc, REFRESH_DEPTH.NO_REFRESH, []);
+      const userCert = await manager.getUserCert(userCertId, nullFunc, REFRESH_DEPTH.NO_REFRESH, ["certificate", "certificateImage"]);
+      console.log(userCert);
       assert.equal(userCert.certId, validUserCert.certId);
       assert.equal(userCert.from, validUserCert.from);
       assert.equal(userCert.to, validUserCert.to);
