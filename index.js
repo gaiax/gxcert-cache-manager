@@ -15,6 +15,7 @@ class GxCertCacheManager {
     this.addressToUserCerts = {};
     this.userCerts = {};
     this.groups = {};
+    this.groupIdToCerts = {};
     this.groupsToBelongTo = {};
     this.certificates = {};
     this.images = {};

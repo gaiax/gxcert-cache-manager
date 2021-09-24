@@ -336,4 +336,17 @@ describe("GxCertCacheManager", () => {
 
     });
   });
+  describe("getGroupCerts", () => {
+    const manager = new GxCertCacheManager([client]);
+    it ("get", async function() {
+      const certs = await manager.getGroupCerts(groupId, nullFunc, REFRESH_DEPTH.NO_REFRESH, ["certificateImage"]);
+      assert.equal(certs.length, 1);
+      const cert = certs[0];
+      assert.equal(cert.certId, validUserCert.certId);
+      assert.equal(cert.title, validCert.title);
+      assert.equal(cert.description, validCert.description);
+      assert.equal(cert.image, validCert.image);
+      assert.equal(cert.imageUrl, "");
+    });
+  });
 });
