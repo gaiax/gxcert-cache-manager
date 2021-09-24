@@ -31,6 +31,9 @@ class GxCertCacheManager {
     this.certificates = {};
     this.images = {};
   }
+  address() {
+    return this.client.address;
+  }
   setMainClient(client) {
     this.clients[0] = client;
     this.client = client;
@@ -183,7 +186,7 @@ class GxCertCacheManager {
         certs[i].imageUrl = await this.getImage(certs[i].image, dispatch);
       }
     }
-    if (popDepth("issuedUserCert", depth).target) {
+    if (popDepth("userCert", depth).target) {
       for (let i = 0; i < certs.length; i++) {
         const userCerts = await this.getIssuedUserCerts(certs[i].certId, dispatch, depth, clientIndex);
         certs.userCerts = userCerts;
