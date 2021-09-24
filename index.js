@@ -6,6 +6,22 @@ const REFRESH_DEPTH = {
   DEEP: 2,
 }
 
+function popDepth(type, depth) {
+  let target = null;
+  for (const d of depth) {
+    if (d.type === type) {
+      target = d;
+      break;
+    }
+  }
+  return {
+    target,
+    depth: depth.filter(d => {
+      return d.type !== type;
+    })
+  }
+}
+
 class GxCertCacheManager {
   constructor(clients) {
     this.clients = clients;
@@ -24,9 +40,12 @@ class GxCertCacheManager {
     this.clients[0] = client;
     this.client = client;
   }
-  async getProfile(address, dispatch, refresh, depth, clientIndex) {
+  async getProfile(address, dispatch, depth, clientIndex) {
     let profile;
-    if (refresh === REFRESH_DEPTH.NO_REFRESH && address in this.profiles) {
+    const depthResult = popDepth("profile", depth);
+    const target = depthResult.target;
+    depth = depthResult.depth;
+    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && address in this.profiles) {
       profile = this.profiles[address];
     } else {
       if (clientIndex) {
@@ -36,7 +55,7 @@ class GxCertCacheManager {
       }
     }
     this.profiles[address] = profile;
-    if (depth.includes("profileImage")) {
+    if (popDepth("profileImage", depth).target) {
       profile.imageUrl = await this.getImage(profile.icon, dispatch);
     }
     dispatch({
@@ -45,9 +64,12 @@ class GxCertCacheManager {
     });
     return profile;
   }
-  async getReceivedUserCerts(address, dispatch, refresh, depth, clientIndex) {
+  async getReceivedUserCerts(address, dispatch, depth, clientIndex) {
     let userCerts;
-    if (refresh === REFRESH_DEPTH.NO_REFRESH && address in this.addressToUserCerts) {
+    let depthResult = popDepth("userCert", depth);
+    const target = depthResult.target;
+    depth = depthResult.depth;
+    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && address in this.addressToUserCerts) {
       userCerts = this.addressToUserCerts[address];
     } else {
       if (clientIndex) {
@@ -62,16 +84,12 @@ class GxCertCacheManager {
       }
     }
     this.addressToUserCerts[address] = userCerts;
-    if (depth.includes("certificate")) {
+    if (popDepth("certificate", depth).target) {
       const _userCerts = [];
       for (const userCert of userCerts) {
         const _userCert = { ...userCert };
         let cert;
-        if (refresh === REFRESH_DEPTH.SHALLOW) {
-          cert = await this.getCert(userCert.certId, dispatch, REFRESH_DEPTH.NO_REFRESH, depth, clientIndex);
-        } else {
-          cert = await this.getCert(userCert.certId, dispatch, refresh, depth, clientIndex);
-        }
+        cert = await this.getCert(userCert.certId, dispatch, depth, clientIndex);
         _userCert.certificate = cert;
         _userCerts.push(_userCert);
       }
@@ -87,9 +105,12 @@ class GxCertCacheManager {
     });
     return userCerts;
   }
-  async getIssuedUserCerts(certId, dispatch, refresh, depth, clientIndex) {
+  async getIssuedUserCerts(certId, dispatch, depth, clientIndex) {
     let userCerts;
-    if (refresh === REFRESH_DEPTH.NO_REFRESH && certId in this.certIdToUserCerts) {
+    const depthResult = popDepth("userCert", depth);
+    const target = depthResult.target;
+    depth = depthResult.depth;
+    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && certId in this.certIdToUserCerts) {
       userCerts = this.certIdToUserCerts[certId];
     } else {
       if (clientIndex) {
@@ -104,16 +125,11 @@ class GxCertCacheManager {
       }
     }
     this.certIdToUserCerts[certId] = userCerts;
-    if (depth.includes("certificate")) {
+    if (popDepth("certificate", depth).target) {
       const _userCerts = [];
       for (const userCert of userCerts) {
         const _userCert = { ...userCert };
-        let cert;
-        if (refresh === REFRESH_DEPTH.SHALLOW) {
-          cert = await this.getCert(userCert.certId, dispatch, REFRESH_DEPTH.NO_REFRESH, depth, clientIndex);
-        } else {
-          cert = await this.getCert(userCert.certId, dispatch, refresh, depth, clientIndex);
-        }
+        const cert = await this.getCert(userCert.certId, dispatch, depth, clientIndex);
         _userCert.certificate = cert;
         _userCerts.push(_userCert);
       }
@@ -147,9 +163,12 @@ class GxCertCacheManager {
     });
     return imageUrl;
   }
-  async getGroupCerts(groupId, dispatch, refresh, depth, clientIndex) {
+  async getGroupCerts(groupId, dispatch, depth, clientIndex) {
     let certs;
-    if (refresh === REFRESH_DEPTH.NO_REFRESH && groupId in this.groupIdToCerts) {
+    const depthResult = popDepth("certificate", depth);
+    const target = depthResult.target;
+    depth = depthResult.depth;
+    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && groupId in this.groupIdToCerts) {
       certs = this.groupIdToCerts[groupId];
     } else {
       certs = await this.client.getGroupCerts(groupId);
@@ -159,25 +178,23 @@ class GxCertCacheManager {
         payload: this.groupIdToCerts,
       });
     }
-    if (depth.includes("certificateImage")) {
+    if (popDepth("certificateImage", depth).target) {
       for (let i = 0; i < certs.length; i++) {
         certs[i].imageUrl = await this.getImage(certs[i].image, dispatch);
       }
     }
-    if (depth.includes("issuedUserCert")) {
-      let newDepth = [...depth];
-      newDepth = newDepth.filter(d => {
-        return d !== "certificate"
-      });
+    if (popDepth("issuedUserCert", depth).target) {
       for (let i = 0; i < certs.length; i++) {
-        const userCerts = await this.getIssuedUserCerts(
-
+        const userCerts = await this.getIssuedUserCerts(certs[i].certId, dispatch, depth, clientIndex);
+        certs.userCerts = userCerts;
       }
     }
     return certs;
   }
-  async getGroups(address, dispatch, refresh, clientIndex) {
-    if (refresh === REFRESH_DEPTH.NO_REFRESH && address in this.groupsToBelongTo) {
+  async getGroups(address, dispatch, depth, clientIndex) {
+    const depthResult = popDepth("group", depth);
+    const target = depthResult.target;
+    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && address in this.groupsToBelongTo) {
       return this.groupsToBelongTo[address];
     }
     let groupIds;
@@ -188,7 +205,7 @@ class GxCertCacheManager {
     }
     const groups = [];
     for (const groupId of groupIds) {
-      const group = await this.getGroup(groupId, ()=>{}, refresh, clientIndex);
+      const group = await this.getGroup(groupId, ()=>{}, depth, clientIndex);
       groups.push(group);
     }
     this.groupsToBelongTo[address] = groups;
@@ -198,8 +215,11 @@ class GxCertCacheManager {
     });
     return groups;
   }
-  async getGroup(groupId, dispatch, refresh, clientIndex) {
-    if (refresh === REFRESH_DEPTH.NO_REFRESH && groupId in this.groups) {
+  async getGroup(groupId, dispatch, depth, clientIndex) {
+    const depthResult = popDepth("group", depth);
+    const target = depthResult.target;
+    depth = depthResult.depth;
+    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && groupId in this.groups) {
       return this.groups[groupId];
     }
     let group;
@@ -215,9 +235,12 @@ class GxCertCacheManager {
     });
     return group;
   }
-  async getUserCert(userCertId, dispatch, refresh, depth, clientIndex) {
+  async getUserCert(userCertId, dispatch, depth, clientIndex) {
+    const depthResult = popDepth("userCert", depth);
+    const target = depthResult.target;
+    depth = depthResult.depth;
     let userCert;
-    if (refresh === REFRESH_DEPTH.NO_REFRESH && userCertId in this.userCerts) {
+    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && userCertId in this.userCerts) {
       userCert = this.userCerts[userCertId];
     } else {
       if (clientIndex) {
@@ -231,33 +254,24 @@ class GxCertCacheManager {
       type: "UPDATE_USER_CERT_CACHE",
       payload: this.userCerts,
     });
-    if (depth.includes("certificate")) {
-      if (refresh === REFRESH_DEPTH.SHALLOW) {
-        userCert.certificate = await this.getCert(userCert.certId, dispatch, REFRESH_DEPTH.NO_REFRESH, depth, clientIndex);
-      } else {
-        userCert.certificate = await this.getCert(userCert.certId, dispatch, refresh, depth, clientIndex);
-      }
+    if (popDepth("certificate", depth).target) {
+      userCert.certificate = await this.getCert(userCert.certId, dispatch, depth, clientIndex);
     }
-    if (depth.includes("profile")) {
-      if (refresh === REFRESH_DEPTH.SHALLOW) {
-        try {
-          userCert.toProfile = await this.getProfile(userCert.to, dispatch, REFRESH_DEPTH.NO_REFRESH, depth, clientIndex);
-        } catch(err) {
-          console.error(err);
-        }
-      } else {
-        try {
-          userCert.toProfile = await this.getProfile(userCert.to, dispatch, refresh, depth, clientIndex);
-        } catch(err) {
-          console.error(err);
-        }
+    if (popDepth("profile", depth).target) {
+      try {
+        userCert.toProfile = await this.getProfile(userCert.to, dispatch, depth, clientIndex);
+      } catch(err) {
+        console.error(err);
       }
     }
     return userCert;
   }
-  async getCert(certId, dispatch, refresh, depth, clientIndex) {
+  async getCert(certId, dispatch, depth, clientIndex) {
+    const depthResult = popDepth("certificate", depth);
+    const target = depthResult.target;
+    depth = depthResult.depth;
     let cert;
-    if (refresh === REFRESH_DEPTH.NO_REFRESH && certId in this.certificates) {
+    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && certId in this.certificates) {
       cert = this.certificates[certId];
     } else {
       if (clientIndex) {
@@ -267,16 +281,11 @@ class GxCertCacheManager {
       }
     }
     this.certificates[certId] = cert;
-    if (depth.includes("certificateImage")) {
+    if (popDepth("certificateImage", depth).target) {
       cert.imageUrl = await this.getImage(cert.image, dispatch);
     }
-    if (depth.includes("group")) {
-      let group;
-      if (refresh === REFRESH_DEPTH.SHALLOW) {
-        group = await this.getGroup(cert.groupId, dispatch, REFRESH_DEPTH.NO_REFRESH, clientIndex);
-      } else {
-        group = await this.getGroup(cert.groupId, dispatch, refresh, clientIndex);
-      }
+    if (popDepth("group", depth).target) {
+      const group = await this.getGroup(cert.groupId, dispatch, depth, clientIndex);
       cert.group = group;
     }
     return cert;
