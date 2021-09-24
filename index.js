@@ -1,10 +1,5 @@
 
 const { getImageOnIpfs, createImageUrlFromUint8Array } = require("./ipfs");
-const REFRESH_DEPTH = {
-  NO_REFRESH: 0,
-  SHALLOW: 1,
-  DEEP: 2,
-}
 
 function popDepth(type, depth) {
   let target = null;
@@ -45,7 +40,7 @@ class GxCertCacheManager {
     const depthResult = popDepth("profile", depth);
     const target = depthResult.target;
     depth = depthResult.depth;
-    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && address in this.profiles) {
+    if (!target.refresh && address in this.profiles) {
       profile = this.profiles[address];
     } else {
       if (clientIndex) {
@@ -69,7 +64,7 @@ class GxCertCacheManager {
     let depthResult = popDepth("userCert", depth);
     const target = depthResult.target;
     depth = depthResult.depth;
-    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && address in this.addressToUserCerts) {
+    if (!target.refresh && address in this.addressToUserCerts) {
       userCerts = this.addressToUserCerts[address];
     } else {
       if (clientIndex) {
@@ -110,7 +105,7 @@ class GxCertCacheManager {
     const depthResult = popDepth("userCert", depth);
     const target = depthResult.target;
     depth = depthResult.depth;
-    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && certId in this.certIdToUserCerts) {
+    if (!target.refresh && certId in this.certIdToUserCerts) {
       userCerts = this.certIdToUserCerts[certId];
     } else {
       if (clientIndex) {
@@ -134,6 +129,11 @@ class GxCertCacheManager {
         _userCerts.push(_userCert);
       }
       userCerts = _userCerts;
+    }
+    if (popDepth("profile", depth).target) {
+      for (let i = 0; i < userCerts.length; i++) {
+        userCerts[i].toProfile = await this.getProfile(userCerts[i].to, dispatch, depth, clientIndex);
+      }
     }
     dispatch({
       type: "UPDATE_USER_CERT_CACHE",
@@ -168,7 +168,7 @@ class GxCertCacheManager {
     const depthResult = popDepth("certificate", depth);
     const target = depthResult.target;
     depth = depthResult.depth;
-    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && groupId in this.groupIdToCerts) {
+    if (!target.refresh && groupId in this.groupIdToCerts) {
       certs = this.groupIdToCerts[groupId];
     } else {
       certs = await this.client.getGroupCerts(groupId);
@@ -194,7 +194,7 @@ class GxCertCacheManager {
   async getGroups(address, dispatch, depth, clientIndex) {
     const depthResult = popDepth("group", depth);
     const target = depthResult.target;
-    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && address in this.groupsToBelongTo) {
+    if (!target.refresh && address in this.groupsToBelongTo) {
       return this.groupsToBelongTo[address];
     }
     let groupIds;
@@ -213,13 +213,17 @@ class GxCertCacheManager {
       type: "UPDATE_GROUPS_CACHE",
       payload: this.groupsToBelongTo,
     });
+    dispatch({
+      type: "UPDATE_GROUP_CACHE",
+      payload: this.groupsToBelongTo,
+    });
     return groups;
   }
   async getGroup(groupId, dispatch, depth, clientIndex) {
     const depthResult = popDepth("group", depth);
     const target = depthResult.target;
     depth = depthResult.depth;
-    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && groupId in this.groups) {
+    if (!target.refresh && groupId in this.groups) {
       return this.groups[groupId];
     }
     let group;
@@ -240,7 +244,7 @@ class GxCertCacheManager {
     const target = depthResult.target;
     depth = depthResult.depth;
     let userCert;
-    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && userCertId in this.userCerts) {
+    if (!target.refresh && userCertId in this.userCerts) {
       userCert = this.userCerts[userCertId];
     } else {
       if (clientIndex) {
@@ -271,7 +275,7 @@ class GxCertCacheManager {
     const target = depthResult.target;
     depth = depthResult.depth;
     let cert;
-    if (target.refresh === REFRESH_DEPTH.NO_REFRESH && certId in this.certificates) {
+    if (!target.refresh && certId in this.certificates) {
       cert = this.certificates[certId];
     } else {
       if (clientIndex) {
@@ -295,5 +299,4 @@ class GxCertCacheManager {
 
 module.exports = {
   GxCertCacheManager,
-  REFRESH_DEPTH,
 }

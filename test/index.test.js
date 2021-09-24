@@ -7,7 +7,6 @@ const assert = require("assert");
 
 const {
   GxCertCacheManager,
-  REFRESH_DEPTH,
 } = require("../index");
 const GxCertClient = require("gxcert-lib");
 const GxCertWriter = require("gxcert-write");
@@ -61,7 +60,6 @@ let validCert = {
   image: "QmYBSzzk3shgGcos5SnTDaJRh3ZvV8rnwSbGPmsrnWDjVH",
   groupId: null,
 }
-console.log(validCert);
 let validUserCert = {
   certId: null,
   from: alice.address,
@@ -94,11 +92,11 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "profile",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "profileImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           }
         ], 
       );
@@ -114,11 +112,11 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "profile",
-            refresh: REFRESH_DEPTH.SHALLOW,
+            refresh: true,
           },
           {
             type: "profileImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           }
         ]
       );
@@ -135,11 +133,11 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "profile",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "profileImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           }
         ]
       );
@@ -156,11 +154,11 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "profile",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "profileImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           }
         ]
       );
@@ -175,11 +173,11 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "profile",
-            refresh: REFRESH_DEPTH.SHALLOW,
+            refresh: true,
           },
           {
             type: "profileImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           }
         ]);
 
@@ -203,7 +201,7 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "group",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           }
         ]
       );
@@ -229,14 +227,15 @@ describe("GxCertCacheManager", () => {
       const signedGroup = await client.signGroup(newGroup, { privateKey: alice.privateKey });
       await writer.updateGroup(charlie.address, signedGroup);
     });
-    it ("don't refresh(getGroups)", async function() {
+    it ("getGroups (no refresh)", async function() {
+      manager.setMainClient(null);
       const groups = await manager.getGroups(
         alice.address, 
         nullFunc, 
         [
           {
             type: "group",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           }
         ]
       );
@@ -253,6 +252,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(group.members[0].icon, validProfile.icon);
 
       validGroup = newGroup;
+      manager.setMainClient(client);
     });
     it ("refresh", async function() {
       const groups = await manager.getGroups(
@@ -261,7 +261,7 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "group",
-            refresh: REFRESH_DEPTH.SHALLOW,
+            refresh: true,
           }
         ]
       );
@@ -277,13 +277,14 @@ describe("GxCertCacheManager", () => {
       assert.equal(group.members[0].icon, validProfile.icon);
     });
     it ("getGroup (no refresh)", async function() {
+      manager.setMainClient(null);
       const group = await manager.getGroup(
         groupId, 
         nullFunc, 
         [
           {
             type: "group",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           }
         ],
       );
@@ -294,6 +295,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(group.members[0].name, validProfile.name);
       assert.equal(group.members[0].address, alice.address);
       assert.equal(group.members[0].icon, validProfile.icon);
+      manager.setMainClient(client);
     });
   });
   describe("get user certs", () => {
@@ -318,7 +320,7 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "userCert",
-            refresh: REFRESH_DEPTH.SHALLOW,
+            refresh: true,
           }
         ]
       );
@@ -339,11 +341,11 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "userCert",
-            refresh: REFRESH_DEPTH.SHALLOW,
+            refresh: true,
           },
           {
             type: "certificate",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           }
         ]
       );
@@ -366,15 +368,15 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "userCert",
-            refresh: REFRESH_DEPTH.SHALLOW,
+            refresh: true,
           },
           {
             type: "certificate",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "certificateImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           }
         ]
       );
@@ -390,22 +392,26 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.image, validCert.image);
       assert.equal(userCert.certificate.imageUrl, "");
     });
-    it ("get issued user certs(no refresh)", async function() {
+    it ("get issued user certs with certificate image and group", async function() {
       const userCerts = await manager.getIssuedUserCerts(
         certId, 
         nullFunc, 
         [
           {
             type: "userCert",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: true,
           },
           {
             type: "certificate",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "certificateImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
+          },
+          {
+            type: "group",
+            refresh: false,
           },
         ]
       );
@@ -420,6 +426,93 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.description, validCert.description);
       assert.equal(userCert.certificate.image, validCert.image);
       assert.equal(userCert.certificate.imageUrl, "");
+      assert.equal(userCert.certificate.group.name, validGroup.name);
+      assert.equal(userCert.certificate.group.residence, validGroup.residence);
+      assert.equal(userCert.certificate.group.phone, validGroup.phone);
+    });
+    it ("get issued user certs with certificate image and group and profile", async function() {
+      const userCerts = await manager.getIssuedUserCerts(
+        certId, 
+        nullFunc, 
+        [
+          {
+            type: "userCert",
+            refresh: true,
+          },
+          {
+            type: "certificate",
+            refresh: false,
+          },
+          {
+            type: "certificateImage",
+            refresh: false,
+          },
+          {
+            type: "group",
+            refresh: false,
+          },
+          {
+            type: "profile",
+            refresh: false,
+          },
+          {
+            type: "profileImage",
+            refresh: false,
+          },
+        ]
+      );
+      assert.equal(userCerts.length, 1);
+
+      console.log(userCerts[0]);
+      const userCert = userCerts[0];
+      assert.equal(userCert.certId, validUserCert.certId);
+      assert.equal(userCert.from, validUserCert.from);
+      assert.equal(userCert.to, validUserCert.to);
+      assert.equal(userCert.certificate.certId, validUserCert.certId);
+      assert.equal(userCert.certificate.title, validCert.title);
+      assert.equal(userCert.certificate.description, validCert.description);
+      assert.equal(userCert.certificate.image, validCert.image);
+      assert.equal(userCert.certificate.imageUrl, "");
+      assert.equal(userCert.certificate.group.name, validGroup.name);
+      assert.equal(userCert.certificate.group.residence, validGroup.residence);
+      assert.equal(userCert.certificate.group.phone, validGroup.phone);
+      assert.equal(userCert.toProfile.name, bobProfile.name);
+      assert.equal(userCert.toProfile.email, bobProfile.email);
+      assert.equal(userCert.toProfile.icon, bobProfile.icon);
+      assert.equal(userCert.toProfile.imageUrl, "");
+    });
+    it ("get issued user certs(no refresh)", async function() {
+      manager.setMainClient(null);
+      const userCerts = await manager.getIssuedUserCerts(
+        certId, 
+        nullFunc, 
+        [
+          {
+            type: "userCert",
+            refresh: false,
+          },
+          {
+            type: "certificate",
+            refresh: false,
+          },
+          {
+            type: "certificateImage",
+            refresh: false,
+          },
+        ]
+      );
+      assert.equal(userCerts.length, 1);
+
+      const userCert = userCerts[0];
+      assert.equal(userCert.certId, validUserCert.certId);
+      assert.equal(userCert.from, validUserCert.from);
+      assert.equal(userCert.to, validUserCert.to);
+      assert.equal(userCert.certificate.certId, validUserCert.certId);
+      assert.equal(userCert.certificate.title, validCert.title);
+      assert.equal(userCert.certificate.description, validCert.description);
+      assert.equal(userCert.certificate.image, validCert.image);
+      assert.equal(userCert.certificate.imageUrl, "");
+      manager.setMainClient(client);
     });
     it ("get received user certs", async function() {
       const userCerts = await manager.getReceivedUserCerts(
@@ -428,7 +521,7 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "userCert",
-            refresh: REFRESH_DEPTH.SHALLOW,
+            refresh: true,
           }
         ]
       );
@@ -447,11 +540,11 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "userCert",
-            refresh: REFRESH_DEPTH.SHALLOW,
+            refresh: true,
           },
           {
             type: "certificate",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
         ]
       );
@@ -473,15 +566,15 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "userCert",
-            refresh: REFRESH_DEPTH.SHALLOW,
+            refresh: true,
           },
           {
             type: "certificate",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "certificateImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
         ]
       );
@@ -497,21 +590,22 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get received user certs(no refresh)", async function() {
+      manager.setMainClient(null);
       const userCerts = await manager.getReceivedUserCerts(
         bob.address, 
         nullFunc, 
         [
           {
             type: "userCert",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "certificate",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "certificateImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
         ]
       );
@@ -526,39 +620,40 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.description, validCert.description);
       assert.equal(userCert.certificate.image, validCert.image);
       assert.equal(userCert.certificate.imageUrl, "");
+      manager.setMainClient(client);
     });
     it ("get user cert(no refresh)", async function () {
+      manager.setMainClient(null);
       const userCert = await manager.getUserCert(
         userCertId, 
         nullFunc, 
         [
           {
             type: "userCert",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "certificate",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "certificateImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "group",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "profile",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "profileImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
         ]
       );
-      console.log(userCert);
       assert.equal(userCert.certId, validUserCert.certId);
       assert.equal(userCert.from, validUserCert.from);
       assert.equal(userCert.to, validUserCert.to);
@@ -574,7 +669,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.toProfile.email, bobProfile.email);
       assert.equal(userCert.toProfile.icon, bobProfile.icon);
       assert.equal(userCert.toProfile.imageUrl, "");
-
+      manager.setMainClient(client);
     });
   });
   describe("getGroupCerts", () => {
@@ -586,11 +681,11 @@ describe("GxCertCacheManager", () => {
         [
           {
             type: "certificate",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
           {
             type: "certificateImage",
-            refresh: REFRESH_DEPTH.NO_REFRESH,
+            refresh: false,
           },
         ]
       );
@@ -601,6 +696,31 @@ describe("GxCertCacheManager", () => {
       assert.equal(cert.description, validCert.description);
       assert.equal(cert.image, validCert.image);
       assert.equal(cert.imageUrl, "");
+    });
+    it ("get (no refresh)", async function() {
+      manager.setMainClient(null);
+      const certs = await manager.getGroupCerts(
+        groupId, 
+        nullFunc, 
+        [
+          {
+            type: "certificate",
+            refresh: false,
+          },
+          {
+            type: "certificateImage",
+            refresh: false,
+          },
+        ]
+      );
+      assert.equal(certs.length, 1);
+      const cert = certs[0];
+      assert.equal(cert.certId, validUserCert.certId);
+      assert.equal(cert.title, validCert.title);
+      assert.equal(cert.description, validCert.description);
+      assert.equal(cert.image, validCert.image);
+      assert.equal(cert.imageUrl, "");
+      manager.setMainClient(client);
     });
   });
 });
