@@ -201,9 +201,24 @@ class GxCertCacheManager {
     });
     if (depth.includes("certificate")) {
       if (refresh === REFRESH_DEPTH.SHALLOW) {
-        userCert.certificate = await this.getCert(userCert.certId, dispatch, REFRESH_DEPTH.NO_REFRESH, depth);
+        userCert.certificate = await this.getCert(userCert.certId, dispatch, REFRESH_DEPTH.NO_REFRESH, depth, clientIndex);
       } else {
-        userCert.certificate = await this.getCert(userCert.certId, dispatch, refresh, depth);
+        userCert.certificate = await this.getCert(userCert.certId, dispatch, refresh, depth, clientIndex);
+      }
+    }
+    if (depth.includes("profile")) {
+      if (refresh === REFRESH_DEPTH.SHALLOW) {
+        try {
+          userCert.toProfile = await this.getProfile(userCert.to, dispatch, REFRESH_DEPTH.NO_REFRESH, depth, clientIndex);
+        } catch(err) {
+          console.error(err);
+        }
+      } else {
+        try {
+          userCert.toProfile = await this.getProfile(userCert.to, dispatch, refresh, depth, clientIndex);
+        } catch(err) {
+          console.error(err);
+        }
       }
     }
     return userCert;

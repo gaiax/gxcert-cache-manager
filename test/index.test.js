@@ -42,6 +42,12 @@ let validProfile = {
   icon: "QmYRBkuxi46tLdFrALkAm1qYztBfNQGKRsQK5UsT9dEMaW",
 }
 
+let bobProfile = {
+  name: "bob",
+  email: "bob@example.com",
+  icon: "QmYRBkuxi46tLdFrALkAm1qYztBfNQGKRsQK5UsT9dEMaW",
+}
+
 let validGroup = {
   name: "group1",
   residence: "residence",
@@ -75,8 +81,10 @@ describe("GxCertCacheManager", () => {
   });
   describe("getProfile", () => {
     it ("create profile", async function() {
-      const signedProfile = await client.signProfile(validProfile, { privateKey: alice.privateKey });
+      let signedProfile = await client.signProfile(validProfile, { privateKey: alice.privateKey });
       await writer.createProfile(charlie.address, alice.address, signedProfile);
+      signedProfile = await client.signProfile(bobProfile, { privateKey: bob.privateKey });
+      await writer.createProfile(charlie.address, bob.address, signedProfile);
     });
     it ("without image", async function() {
       const manager = new GxCertCacheManager([client]);
@@ -308,7 +316,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get user cert(no refresh)", async function () {
-      const userCert = await manager.getUserCert(userCertId, nullFunc, REFRESH_DEPTH.NO_REFRESH, ["certificate", "certificateImage", "group"]);
+      const userCert = await manager.getUserCert(userCertId, nullFunc, REFRESH_DEPTH.NO_REFRESH, ["certificate", "certificateImage", "group", "profile", "profileImage"]);
       console.log(userCert);
       assert.equal(userCert.certId, validUserCert.certId);
       assert.equal(userCert.from, validUserCert.from);
@@ -321,6 +329,10 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.group.name, validGroup.name);
       assert.equal(userCert.certificate.group.residence, validGroup.residence);
       assert.equal(userCert.certificate.group.phone, validGroup.phone);
+      assert.equal(userCert.toProfile.name, bobProfile.name);
+      assert.equal(userCert.toProfile.email, bobProfile.email);
+      assert.equal(userCert.toProfile.icon, bobProfile.icon);
+      assert.equal(userCert.toProfile.imageUrl, "");
 
     });
   });
