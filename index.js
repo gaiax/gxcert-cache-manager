@@ -36,23 +36,7 @@ class GxCertCacheManager {
     }
     this.profiles[address] = profile;
     if (depth.includes("profileImage")) {
-      let imageUrl;
-      if (refresh === REFRESH_DEPTH.SHALLOW && profile.icon in this.images) {
-        imageUrl = this.images[profile.icon]; 
-      } else {
-        try {
-          imageUrl = await getImageOnIpfs(profile.icon);
-          this.images[profile.icon] = imageUrl;
-          dispatch({
-            type: "UPDATE_IMAGE_CACHE",
-            payload: this.images,
-          });
-        } catch(err) {
-          console.error(err);
-          imageUrl = "";
-        }
-      }
-      profile.imageUrl = imageUrl;
+      profile.imageUrl = await this.getImage(profile.icon);
     }
     dispatch({
       type: "UPDATE_PROFILE_CACHE",
@@ -143,6 +127,43 @@ class GxCertCacheManager {
       payload: this.certIdToUserCerts,
     });
     return userCerts;
+  }
+  async getImage(cid, dispatch) {
+    if (cid in this.images) {
+      return this.images[cid];
+    }
+    let imageUrl;
+    try {
+      imageUrl = await getImageOnIpfs(cid);
+    } catch(err) {
+      console.error(err);
+      return "";
+    }
+    this.images[cid] = imageUrl;
+    dispatch({
+      type: "UPDATE_IMAGE_CACHE",
+      payload: this.images,
+    });
+    return imageUrl;
+  }
+  async getGroupCerts(groupId, dispatch, refresh, depth, clientIndex) {
+    let certs;
+    if (refresh === REFRESH_DEPTH.NO_REFRESH && groupId in this.groupIdToCerts) {
+      certs = this.groupIdToCerts[groupId];
+    } else {
+      certs = await this.client.getGroupCerts(groupId);
+      this.groupIdToCerts[groupId] = certs;
+      dispatch({
+        type: "UPDATE_GROUP_CERTS_CACHE",
+        payload: this.groupIdToCerts,
+      });
+    }
+    if (depth.includes("certificateImage")) {
+      for (let i = 0; i < certs.length; i++) {
+        certs[i].imageUrl = await this.getImage(certs[i].image);
+      }
+    }
+    return certs;
   }
   async getGroups(address, dispatch, refresh, clientIndex) {
     if (refresh === REFRESH_DEPTH.NO_REFRESH && address in this.groupsToBelongTo) {
@@ -236,24 +257,7 @@ class GxCertCacheManager {
     }
     this.certificates[certId] = cert;
     if (depth.includes("certificateImage")) {
-      let imageUrl;
-      if (refresh === REFRESH_DEPTH.SHALLOW && cert.image in this.images) {
-        imageUrl = this.images[cert.image];
-      } else {
-        try {
-          console.log(cert);
-          imageUrl = await getImageOnIpfs(cert.image);
-          this.images[cert.image] = imageUrl;
-          dispatch({
-            type: "UPDATE_IMAGE_CACHE",
-            payload: this.images,
-          });
-        } catch(err) {
-          console.error(err);
-          imageUrl = "";
-        }
-      }
-      cert.imageUrl = imageUrl;
+      cert.imageUrl = await this.getImage(cert.image);
     }
     if (depth.includes("group")) {
       let group;
