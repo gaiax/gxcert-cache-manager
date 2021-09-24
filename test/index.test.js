@@ -308,7 +308,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.imageUrl, "");
     });
     it ("get user cert(no refresh)", async function () {
-      const userCert = await manager.getUserCert(userCertId, nullFunc, REFRESH_DEPTH.NO_REFRESH, ["certificate", "certificateImage"]);
+      const userCert = await manager.getUserCert(userCertId, nullFunc, REFRESH_DEPTH.NO_REFRESH, ["certificate", "certificateImage", "group"]);
       console.log(userCert);
       assert.equal(userCert.certId, validUserCert.certId);
       assert.equal(userCert.from, validUserCert.from);
@@ -318,6 +318,10 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.description, validCert.description);
       assert.equal(userCert.certificate.image, validCert.image);
       assert.equal(userCert.certificate.imageUrl, "");
+      assert.equal(userCert.certificate.group.name, validGroup.name);
+      assert.equal(userCert.certificate.group.residence, validGroup.residence);
+      assert.equal(userCert.certificate.group.phone, validGroup.phone);
+
     });
   });
 });

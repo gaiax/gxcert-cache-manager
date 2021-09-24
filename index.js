@@ -209,7 +209,6 @@ class GxCertCacheManager {
     return userCert;
   }
   async getCert(certId, dispatch, refresh, depth, clientIndex) {
-    console.log("cert 1");
     let cert;
     if (refresh === REFRESH_DEPTH.NO_REFRESH && certId in this.certificates) {
       cert = this.certificates[certId];
@@ -227,7 +226,6 @@ class GxCertCacheManager {
         imageUrl = this.images[cert.image];
       } else {
         try {
-          console.log("cert 1.5");
           console.log(cert);
           imageUrl = await getImageOnIpfs(cert.image);
           this.images[cert.image] = imageUrl;
@@ -242,7 +240,15 @@ class GxCertCacheManager {
       }
       cert.imageUrl = imageUrl;
     }
-    console.log("cert 2");
+    if (depth.includes("group")) {
+      let group;
+      if (refresh === REFRESH_DEPTH.SHALLOW) {
+        group = await this.getGroup(cert.groupId, dispatch, REFRESH_DEPTH.NO_REFRESH, clientIndex);
+      } else {
+        group = await this.getGroup(cert.groupId, dispatch, refresh, clientIndex);
+      }
+      cert.group = group;
+    }
     return cert;
   }
 
