@@ -200,6 +200,10 @@ describe("GxCertCacheManager", () => {
         nullFunc, 
         [
           {
+            type: "groupId",
+            refresh: false,
+          },
+          {
             type: "group",
             refresh: false,
           }
@@ -234,6 +238,10 @@ describe("GxCertCacheManager", () => {
         nullFunc, 
         [
           {
+            type: "groupId",
+            refresh: false,
+          },
+          {
             type: "group",
             refresh: false,
           }
@@ -260,9 +268,13 @@ describe("GxCertCacheManager", () => {
         nullFunc, 
         [
           {
+            type: "groupId",
+            refresh: true,
+          },
+          {
             type: "group",
             refresh: true,
-          }
+          },
         ]
       );
 

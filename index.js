@@ -195,7 +195,7 @@ class GxCertCacheManager {
     return certs;
   }
   async getGroups(address, dispatch, depth, clientIndex) {
-    const depthResult = popDepth("group", depth);
+    const depthResult = popDepth("groupId", depth);
     const target = depthResult.target;
     if (!target.refresh && address in this.groupsToBelongTo) {
       return this.groupsToBelongTo[address];
