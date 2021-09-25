@@ -97,6 +97,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "profileImage",
             refresh: false,
+            wait: true,
           }
         ], 
       );
@@ -117,6 +118,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "profileImage",
             refresh: false,
+            wait: true,
           }
         ]
       );
@@ -138,6 +140,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "profileImage",
             refresh: false,
+            wait: true,
           }
         ]
       );
@@ -159,6 +162,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "profileImage",
             refresh: false,
+            wait: true,
           }
         ]
       );
@@ -178,6 +182,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "profileImage",
             refresh: false,
+            wait: true,
           }
         ]);
 
@@ -389,6 +394,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "certificateImage",
             refresh: false,
+            wait: true,
           }
         ]
       );
@@ -420,6 +426,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "certificateImage",
             refresh: false,
+            wait: true,
           },
           {
             type: "group",
@@ -458,6 +465,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "certificateImage",
             refresh: false,
+            wait: true,
           },
           {
             type: "group",
@@ -470,6 +478,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "profileImage",
             refresh: false,
+            wait: true,
           },
         ]
       );
@@ -510,6 +519,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "certificateImage",
             refresh: false,
+            wait: true,
           },
         ]
       );
@@ -587,6 +597,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "certificateImage",
             refresh: false,
+            wait: true,
           },
         ]
       );
@@ -618,6 +629,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "certificateImage",
             refresh: false,
+            wait: true,
           },
         ]
       );
@@ -651,6 +663,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "certificateImage",
             refresh: false,
+            wait: true,
           },
           {
             type: "group",
@@ -663,6 +676,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "profileImage",
             refresh: false,
+            wait: true,
           },
         ]
       );
@@ -698,6 +712,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "certificateImage",
             refresh: false,
+            wait: true,
           },
         ]
       );
@@ -722,6 +737,7 @@ describe("GxCertCacheManager", () => {
           {
             type: "certificateImage",
             refresh: false,
+            wait: true,
           },
         ]
       );
