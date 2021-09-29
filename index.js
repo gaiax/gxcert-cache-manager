@@ -57,7 +57,11 @@ class GxCertCacheManager {
     depthResult = popDepth("profileImage", depth);
     if (depthResult.target) {
       if (depthResult.target.wait) {
-        profile.imageUrl = await this.getImage(profile.icon, dispatch);
+        try {
+          profile.imageUrl = await this.getImage(profile.icon, dispatch);
+        } catch(err) {
+          console.error(err);
+        }
       } else {
         this.getImage(profile.icon, dispatch).then(imageUrl => {
           profile.imageUrl = imageUrl;
