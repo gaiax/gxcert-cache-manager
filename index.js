@@ -201,6 +201,12 @@ class GxCertCacheManager {
         payload: this.groupIdToCerts,
       });
     }
+    if (popDepth("userCert", depth).target) {
+      for (let i = 0; i < certs.length; i++) {
+        const userCerts = await this.getIssuedUserCerts(certs[i].certId, dispatch, depth, clientIndex);
+        certs.userCerts = userCerts;
+      }
+    }
     depthResult = popDepth("certificateImage", depth);
     if (depthResult.target) {
       for (let i = 0; i < certs.length; i++) {
@@ -219,12 +225,6 @@ class GxCertCacheManager {
             console.error(err);
           });
         }
-      }
-    }
-    if (popDepth("userCert", depth).target) {
-      for (let i = 0; i < certs.length; i++) {
-        const userCerts = await this.getIssuedUserCerts(certs[i].certId, dispatch, depth, clientIndex);
-        certs.userCerts = userCerts;
       }
     }
     return certs;
