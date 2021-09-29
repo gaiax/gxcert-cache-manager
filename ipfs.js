@@ -34,13 +34,16 @@ var concatBuffer = function (buffer1, buffer2) {
 
 async function getImageOnIpfs(ipfsHash) {
   let content = new ArrayBuffer(0);
-  for await (const data of ipfs.get(ipfsHash)) {
-    console.log(data);
-    content = concatBuffer(content, data);
+  for await (const file of ipfs.get(ipfsHash)) {
+    const content = [];
+    if (file.content) {
+      for await (const chunk of file.content) {
+        content.push(chunk);
+      }
+      const url = createImageUrlFromUint8Array(content);
+      return url;
+    }
   }
-  console.log(content);
-  const url = createImageUrlFromUint8Array(content);
-  return url;
 }
 
 function uintToString(array) {
