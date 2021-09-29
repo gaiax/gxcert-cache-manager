@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ipfs-http-client": "^52.0.5"
+    "ipfs-http-client": "^49.0.1"
   },
   "devDependencies": {
     "gxcert-lib": "github:gaiax/gxcert-lib",

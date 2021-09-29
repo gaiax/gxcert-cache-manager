@@ -1,5 +1,5 @@
-const { create } = require("ipfs-http-client");
-const ipfs = create({
+import * as IpfsHttpClient from "ipfs-http-client";
+const ipfs = IpfsHttpClient({
   host: "ipfs.infura.io",
   port: 5001,
   protocol: "https",
@@ -33,17 +33,17 @@ var concatBuffer = function (buffer1, buffer2) {
 };
 
 async function getImageOnIpfs(ipfsHash) {
-  let content = new ArrayBuffer(0);
-  for await (const file of ipfs.get(ipfsHash)) {
-    const content = [];
-    if (file.content) {
-      for await (const chunk of file.content) {
-        content.push(chunk);
-      }
-      const url = createImageUrlFromUint8Array(content);
-      return url;
+  const response = await ipfs.get(ipfsHash);
+  for await (const data of response) {
+    console.log(data);
+    let content = new ArrayBuffer(0);
+    for await (const chunk of data.content) {
+      content = concatBuffer(content, chunk);
     }
+    const url = createImageUrlFromUint8Array(content);
+    return url;
   }
+  return null;
 }
 
 function uintToString(array) {
@@ -92,10 +92,4 @@ async function getTextOnIpfs(ipfsHash) {
 }
 
 
-module.exports = {
-  getImageOnIpfs, 
-  getTextOnIpfs, 
-  postCertificate, 
-  postText, 
-  createImageUrlFromUint8Array 
-};
+export { getImageOnIpfs, getTextOnIpfs, postCertificate, postText, createImageUrlFromUint8Array };
