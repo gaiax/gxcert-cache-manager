@@ -235,15 +235,16 @@ class GxCertCacheManager {
     for (const groupId of groupIds) {
       const group = await this.getGroup(groupId, ()=>{}, depth, clientIndex);
       groups.push(group);
+      this.groups[groupId] = group;
     }
     this.groupsToBelongTo[address] = groups;
     dispatch({
-      type: "UPDATE_GROUPS_CACHE",
+      type: "UPDATE_GROUPS_TO_BELONG_TO_CACHE",
       payload: this.groupsToBelongTo,
     });
     dispatch({
       type: "UPDATE_GROUP_CACHE",
-      payload: this.groupsToBelongTo,
+      payload: this.groups,
     });
     return groups;
   }
