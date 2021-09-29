@@ -204,7 +204,7 @@ class GxCertCacheManager {
     if (popDepth("userCert", depth).target) {
       for (let i = 0; i < certs.length; i++) {
         const userCerts = await this.getIssuedUserCerts(certs[i].certId, dispatch, depth, clientIndex);
-        certs.userCerts = userCerts;
+        certs[i].userCerts = userCerts;
       }
     }
     depthResult = popDepth("certificateImage", depth);
