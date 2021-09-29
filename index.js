@@ -71,7 +71,7 @@ class GxCertCacheManager {
               payload: profile,
             });
           }
-        }).catch(err) {
+        }).catch(err => {
           console.error(err);
         });
       }
