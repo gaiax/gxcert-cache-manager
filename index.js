@@ -272,6 +272,11 @@ class GxCertCacheManager {
       group = await this.client.getGroup(groupId);
     }
     this.groups[groupId] = group;
+    if (popDepth("profileImage", depth).target) {
+      for (let i = 0; i < group.members.length; i++) {
+        group.members[i].imageUrl = await this.getImage(group.members[i].icon, dispatch);
+      }
+    }
     dispatch({
       type: "UPDATE_GROUP_CACHE",
       payload: this.groups,
