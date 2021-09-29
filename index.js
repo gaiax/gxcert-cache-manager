@@ -65,10 +65,12 @@ class GxCertCacheManager {
       } else {
         this.getImage(profile.icon, dispatch).then(imageUrl => {
           profile.imageUrl = imageUrl;
-          dispatch({
-            type: depthResult.target.dispatchType,
-            payload: profile,
-          });
+          if (depthResult.target.dispatchType) {
+            dispatch({
+              type: depthResult.target.dispatchType,
+              payload: profile,
+            });
+          }
         });
       }
     }
@@ -205,10 +207,12 @@ class GxCertCacheManager {
         } else {
           this.getImage(certs[i].image, dispatch).then(imageUrl => {
             certs[i].imageUrl = imageUrl;
-            dispatch({
-              type: depthResult.target.dispatchType,
-              payload: certs,
-            });
+            if (depthResult.target.dispatchType) {
+              dispatch({
+                type: depthResult.target.dispatchType,
+                payload: certs,
+              });
+            }
           }).catch(err => {
             console.error(err);
           });
@@ -325,10 +329,12 @@ class GxCertCacheManager {
       } else {
         this.getImage(cert.image, dispatch).then(imageUrl => {
           cert.imageUrl = imageUrl;
-          dispatch({
-            type: depthResult.target.dispatchType,
-            payload: cert,
-          });
+          if (depthResult.target.dispatchType) {
+            dispatch({
+              type: depthResult.target.dispatchType,
+              payload: cert,
+            });
+          }
         }).catch(err => {
           console.error(err);
         });
