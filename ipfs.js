@@ -1,4 +1,4 @@
-import * as IpfsHttpClient from "ipfs-http-client";
+const IpfsHttpClient = require("ipfs-http-client");
 const ipfs = IpfsHttpClient({
   host: "ipfs.infura.io",
   port: 5001,
@@ -92,4 +92,10 @@ async function getTextOnIpfs(ipfsHash) {
 }
 
 
-export { getImageOnIpfs, getTextOnIpfs, postCertificate, postText, createImageUrlFromUint8Array };
+module.exports = { 
+  getImageOnIpfs, 
+  getTextOnIpfs, 
+  postCertificate, 
+  postText, 
+  createImageUrlFromUint8Array 
+};
