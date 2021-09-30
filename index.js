@@ -104,7 +104,7 @@ class GxCertCacheManager {
     this.addressToUserCerts[address] = userCerts;
     if (popDepth("certificate", depth).target) {
       for (let i = 0; i < userCerts.length; i++) {
-        userCerts[i].certificate = await this.getCert(userCerts[i].certId, dispatch, depth, clientIndex, function(cert) {
+        userCerts[i].certificate = await this.getCert(userCerts[i].certId, dispatch, depth, clientIndex, function(type, cert) {
           userCerts[i].certificate = cert;      
           dispatch({
             type,
@@ -145,7 +145,7 @@ class GxCertCacheManager {
     this.certIdToUserCerts[certId] = userCerts;
     if (popDepth("certificate", depth).target) {
       for (let i = 0; i < userCerts.length; i++) {
-        userCerts[i].certificate = await this.getCert(userCerts[i].certId, dispatch, depth, clientIndex, function(cert) {
+        userCerts[i].certificate = await this.getCert(userCerts[i].certId, dispatch, depth, clientIndex, function(type, cert) {
           userCerts[i].certificate = cert;
           dispatch({
             type,
@@ -304,7 +304,7 @@ class GxCertCacheManager {
       payload: this.userCerts,
     });
     if (popDepth("certificate", depth).target) {
-      userCert.certificate = await this.getCert(userCert.certId, dispatch, depth, clientIndex, function(cert) {
+      userCert.certificate = await this.getCert(userCert.certId, dispatch, depth, clientIndex, function(type, cert) {
         userCert.certificate = cert;
         dispatch({
           type,
@@ -344,7 +344,7 @@ class GxCertCacheManager {
         this.getImage(cert.image, dispatch).then((imageUrl) => {
           if (imageCallback) {
             cert.imageUrl = imageUrl;
-            imageCallback(cert);
+            imageCallback(depthResult.target.dispatchType, cert);
           }
         }).catch(err => {
           console.error(err);
