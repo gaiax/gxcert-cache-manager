@@ -38,7 +38,7 @@ class GxCertCacheManager {
     this.clients[0] = client;
     this.client = client;
   }
-  async getProfile(address, dispatch, depth, clientIndex) {
+  async getProfile(address, dispatch, depth, clientIndex, imageCallback) {
     let profile;
     let depthResult = popDepth("profile", depth);
     const target = depthResult.target;
@@ -65,11 +65,8 @@ class GxCertCacheManager {
       } else {
         this.getImage(profile.icon, dispatch).then(imageUrl => {
           profile.imageUrl = imageUrl;
-          if (depthResult.target.dispatchType) {
-            dispatch({
-              type: depthResult.target.dispatchType,
-              payload: profile,
-            });
+          if (imageCallback) {
+            imageCallback(depthResult.target.dispatchType, profile);
           }
         }).catch(err => {
           console.error(err);
@@ -156,7 +153,13 @@ class GxCertCacheManager {
     }
     if (popDepth("profile", depth).target) {
       for (let i = 0; i < userCerts.length; i++) {
-        userCerts[i].toProfile = await this.getProfile(userCerts[i].to, dispatch, depth, clientIndex);
+        userCerts[i].toProfile = await this.getProfile(userCerts[i].to, dispatch, depth, clientIndex, function(type, profile) {
+          userCerts[i].toProfile = profile;
+          dispatch({
+            type,
+            payload: userCerts,
+          });
+        });
       }
     }
     dispatch({
@@ -314,7 +317,13 @@ class GxCertCacheManager {
     }
     if (popDepth("profile", depth).target) {
       try {
-        userCert.toProfile = await this.getProfile(userCert.to, dispatch, depth, clientIndex);
+        userCert.toProfile = await this.getProfile(userCert.to, dispatch, depth, clientIndex, function(type, profile) {
+          userCert.toProfile = profile;
+          dispatch({
+            type,
+            payload: userCert,
+          });
+        });
       } catch(err) {
         console.error(err);
       }
