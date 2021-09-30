@@ -103,9 +103,7 @@ class GxCertCacheManager {
     }
     this.addressToUserCerts[address] = userCerts;
     if (popDepth("certificate", depth).target) {
-      const _userCerts = [];
       for (let i = 0; i < userCerts.length; i++) {
-        userCerts[i].certificate = cert;
         const cert = await this.getCert(userCerts[i].certId, dispatch, depth, clientIndex, function(imageUrl) {
           const depthResult = popDepth("certificateImage", depth);
           const type = depthResult.target.dispatchType;
@@ -118,6 +116,7 @@ class GxCertCacheManager {
             payload: userCerts,
           });
         });
+        userCerts[i].certificate = cert;
       }
     }
     dispatch({
@@ -151,7 +150,6 @@ class GxCertCacheManager {
     }
     this.certIdToUserCerts[certId] = userCerts;
     if (popDepth("certificate", depth).target) {
-      const _userCerts = [];
       for (let i = 0; i < userCerts.length; i++) {
         const cert = await this.getCert(userCerts[i].certId, dispatch, depth, clientIndex, function(imageUrl) {
           const depthResult = popDepth("certificateImage", depth);
