@@ -1,4 +1,3 @@
-
 const { getImageOnIpfs, createImageUrlFromUint8Array } = require("./ipfs");
 
 function popDepth(type, depth) {
@@ -11,10 +10,10 @@ function popDepth(type, depth) {
   }
   return {
     target,
-    depth: depth.filter(d => {
+    depth: depth.filter((d) => {
       return d.type !== type;
-    })
-  }
+    }),
+  };
 }
 
 class GxCertCacheManager {
@@ -59,18 +58,20 @@ class GxCertCacheManager {
       if (depthResult.target.wait) {
         try {
           profile.imageUrl = await this.getImage(profile.icon, dispatch);
-        } catch(err) {
+        } catch (err) {
           console.error(err);
         }
       } else {
-        this.getImage(profile.icon, dispatch).then(imageUrl => {
-          profile.imageUrl = imageUrl;
-          if (imageCallback) {
-            imageCallback(depthResult.target.dispatchType, profile);
-          }
-        }).catch(err => {
-          console.error(err);
-        });
+        this.getImage(profile.icon, dispatch)
+          .then((imageUrl) => {
+            profile.imageUrl = imageUrl;
+            if (imageCallback) {
+              imageCallback(depthResult.target.dispatchType, profile);
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+          });
       }
     }
     dispatch({
@@ -88,7 +89,9 @@ class GxCertCacheManager {
       userCerts = this.addressToUserCerts[address];
     } else {
       if (clientIndex) {
-        userCerts = await this.clients[clientIndex].getReceivedUserCerts(address);
+        userCerts = await this.clients[clientIndex].getReceivedUserCerts(
+          address
+        );
       } else {
         userCerts = await this.client.getReceivedUserCerts(address);
       }
@@ -101,13 +104,19 @@ class GxCertCacheManager {
     this.addressToUserCerts[address] = userCerts;
     if (popDepth("certificate", depth).target) {
       for (let i = 0; i < userCerts.length; i++) {
-        userCerts[i].certificate = await this.getCert(userCerts[i].certId, dispatch, depth, clientIndex, function(type, cert) {
-          userCerts[i].certificate = cert;      
-          dispatch({
-            type,
-            payload: userCerts,
-          });
-        });
+        userCerts[i].certificate = await this.getCert(
+          userCerts[i].certId,
+          dispatch,
+          depth,
+          clientIndex,
+          function (type, cert) {
+            userCerts[i].certificate = cert;
+            dispatch({
+              type,
+              payload: userCerts,
+            });
+          }
+        );
       }
     }
     dispatch({
@@ -142,24 +151,36 @@ class GxCertCacheManager {
     this.certIdToUserCerts[certId] = userCerts;
     if (popDepth("certificate", depth).target) {
       for (let i = 0; i < userCerts.length; i++) {
-        userCerts[i].certificate = await this.getCert(userCerts[i].certId, dispatch, depth, clientIndex, function(type, cert) {
-          userCerts[i].certificate = cert;
-          dispatch({
-            type,
-            payload: userCerts,
-          });
-        });
+        userCerts[i].certificate = await this.getCert(
+          userCerts[i].certId,
+          dispatch,
+          depth,
+          clientIndex,
+          function (type, cert) {
+            userCerts[i].certificate = cert;
+            dispatch({
+              type,
+              payload: userCerts,
+            });
+          }
+        );
       }
     }
     if (popDepth("profile", depth).target) {
       for (let i = 0; i < userCerts.length; i++) {
-        userCerts[i].toProfile = await this.getProfile(userCerts[i].to, dispatch, depth, clientIndex, function(type, profile) {
-          userCerts[i].toProfile = profile;
-          dispatch({
-            type,
-            payload: userCerts,
-          });
-        });
+        userCerts[i].toProfile = await this.getProfile(
+          userCerts[i].to,
+          dispatch,
+          depth,
+          clientIndex,
+          function (type, profile) {
+            userCerts[i].toProfile = profile;
+            dispatch({
+              type,
+              payload: userCerts,
+            });
+          }
+        );
       }
     }
     dispatch({
@@ -179,7 +200,7 @@ class GxCertCacheManager {
     let imageUrl;
     try {
       imageUrl = await getImageOnIpfs(cid);
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       return "";
     }
@@ -207,7 +228,12 @@ class GxCertCacheManager {
     }
     if (popDepth("userCert", depth).target) {
       for (let i = 0; i < certs.length; i++) {
-        const userCerts = await this.getIssuedUserCerts(certs[i].certId, dispatch, depth, clientIndex);
+        const userCerts = await this.getIssuedUserCerts(
+          certs[i].certId,
+          dispatch,
+          depth,
+          clientIndex
+        );
         certs[i].userCerts = userCerts;
       }
     }
@@ -217,17 +243,19 @@ class GxCertCacheManager {
         if (depthResult.target.wait) {
           certs[i].imageUrl = await this.getImage(certs[i].image, dispatch);
         } else {
-          this.getImage(certs[i].image, dispatch).then(imageUrl => {
-            certs[i].imageUrl = imageUrl;
-            if (depthResult.target.dispatchType) {
-              dispatch({
-                type: depthResult.target.dispatchType,
-                payload: certs,
-              });
-            }
-          }).catch(err => {
-            console.error(err);
-          });
+          this.getImage(certs[i].image, dispatch)
+            .then((imageUrl) => {
+              certs[i].imageUrl = imageUrl;
+              if (depthResult.target.dispatchType) {
+                dispatch({
+                  type: depthResult.target.dispatchType,
+                  payload: certs,
+                });
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+            });
         }
       }
     }
@@ -247,7 +275,7 @@ class GxCertCacheManager {
     }
     const groups = [];
     for (const groupId of groupIds) {
-      const group = await this.getGroup(groupId, ()=>{}, depth, clientIndex);
+      const group = await this.getGroup(groupId, () => {}, depth, clientIndex);
       groups.push(group);
       this.groups[groupId] = group;
     }
@@ -278,7 +306,10 @@ class GxCertCacheManager {
     this.groups[groupId] = group;
     if (popDepth("profileImage", depth).target) {
       for (let i = 0; i < group.members.length; i++) {
-        group.members[i].imageUrl = await this.getImage(group.members[i].icon, dispatch);
+        group.members[i].imageUrl = await this.getImage(
+          group.members[i].icon,
+          dispatch
+        );
       }
     }
     dispatch({
@@ -307,24 +338,36 @@ class GxCertCacheManager {
       payload: this.userCerts,
     });
     if (popDepth("certificate", depth).target) {
-      userCert.certificate = await this.getCert(userCert.certId, dispatch, depth, clientIndex, function(type, cert) {
-        userCert.certificate = cert;
-        dispatch({
-          type,
-          payload: userCert,
-        });
-      });
-    }
-    if (popDepth("profile", depth).target) {
-      try {
-        userCert.toProfile = await this.getProfile(userCert.to, dispatch, depth, clientIndex, function(type, profile) {
-          userCert.toProfile = profile;
+      userCert.certificate = await this.getCert(
+        userCert.certId,
+        dispatch,
+        depth,
+        clientIndex,
+        function (type, cert) {
+          userCert.certificate = cert;
           dispatch({
             type,
             payload: userCert,
           });
-        });
-      } catch(err) {
+        }
+      );
+    }
+    if (popDepth("profile", depth).target) {
+      try {
+        userCert.toProfile = await this.getProfile(
+          userCert.to,
+          dispatch,
+          depth,
+          clientIndex,
+          function (type, profile) {
+            userCert.toProfile = profile;
+            dispatch({
+              type,
+              payload: userCert,
+            });
+          }
+        );
+      } catch (err) {
         console.error(err);
       }
     }
@@ -350,25 +393,31 @@ class GxCertCacheManager {
       if (depthResult.target.wait) {
         cert.imageUrl = await this.getImage(cert.image, dispatch);
       } else {
-        this.getImage(cert.image, dispatch).then((imageUrl) => {
-          if (imageCallback) {
-            cert.imageUrl = imageUrl;
-            imageCallback(depthResult.target.dispatchType, cert);
-          }
-        }).catch(err => {
-          console.error(err);
-        });
+        this.getImage(cert.image, dispatch)
+          .then((imageUrl) => {
+            if (imageCallback) {
+              cert.imageUrl = imageUrl;
+              imageCallback(depthResult.target.dispatchType, cert);
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+          });
       }
     }
     if (popDepth("group", depth).target) {
-      const group = await this.getGroup(cert.groupId, dispatch, depth, clientIndex);
+      const group = await this.getGroup(
+        cert.groupId,
+        dispatch,
+        depth,
+        clientIndex
+      );
       cert.group = group;
     }
     return cert;
   }
-
 }
 
 module.exports = {
   GxCertCacheManager,
-}
+};

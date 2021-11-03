@@ -13,8 +13,11 @@
     "ipfs-http-client": "^49.0.1"
   },
   "devDependencies": {
+    "eslint": "^8.1.0",
+    "eslint-config-google": "^0.14.0",
     "gxcert-lib": "github:gaiax/gxcert-lib",
     "gxcert-write": "github:gaiax/gxcert-write",
-    "mocha": "^9.1.1"
+    "mocha": "^9.1.1",
+    "prettier": "^2.4.1"
   }
 }
