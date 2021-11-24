@@ -1,4 +1,4 @@
-const { getImageOnIpfs, createImageUrlFromUint8Array } = require("./ipfs");
+const IPFS = require("./ipfs");
 
 function popDepth(type, depth) {
   let target = null;
@@ -17,7 +17,7 @@ function popDepth(type, depth) {
 }
 
 class GxCertCacheManager {
-  constructor(clients) {
+  constructor(clients, ipfsConfig) {
     this.clients = clients;
     this.client = clients[0];
     this.profiles = {};
@@ -29,6 +29,7 @@ class GxCertCacheManager {
     this.groupsToBelongTo = {};
     this.certificates = {};
     this.images = {};
+    this.ipfs = new IPFS(ipfsConfig);
   }
   address() {
     return this.client.address;
@@ -199,7 +200,7 @@ class GxCertCacheManager {
     }
     let imageUrl;
     try {
-      imageUrl = await getImageOnIpfs(cid);
+      imageUrl = await this.ipfs.getImageOnIpfs(cid);
     } catch (err) {
       console.error(err);
       return "";

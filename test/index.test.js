@@ -67,6 +67,12 @@ let groupId;
 let certId;
 let userCertId;
 
+const ipfsConfig = {
+  host: "ipfs.gaiax-blockchain.com",
+  port: 5001,
+  protocol: "http",
+}
+
 function nullFunc() {}
 
 describe("GxCertCacheManager", () => {
@@ -86,7 +92,7 @@ describe("GxCertCacheManager", () => {
       await writer.createProfile(charlie.address, bob.address, signedProfile);
     });
     it("without image", async function () {
-      const manager = new GxCertCacheManager([client]);
+      const manager = new GxCertCacheManager([client], ipfsConfig);
       const profile = await manager.getProfile(alice.address, nullFunc, [
         {
           type: "profile",
@@ -103,7 +109,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(profile.icon, validProfile.icon);
     });
     it("with image", async function () {
-      const manager = new GxCertCacheManager([client]);
+      const manager = new GxCertCacheManager([client], ipfsConfig);
       const profile = await manager.getProfile(alice.address, nullFunc, [
         {
           type: "profile",
@@ -121,7 +127,7 @@ describe("GxCertCacheManager", () => {
       assert.equal(profile.imageUrl, "");
     });
     it("cache", async function () {
-      const manager = new GxCertCacheManager([client]);
+      const manager = new GxCertCacheManager([client], ipfsConfig);
       const profile = await manager.getProfile(alice.address, nullFunc, [
         {
           type: "profile",
@@ -178,7 +184,7 @@ describe("GxCertCacheManager", () => {
     });
   });
   describe("getGroups", () => {
-    const manager = new GxCertCacheManager([client]);
+    const manager = new GxCertCacheManager([client], ipfsConfig);
     let newGroup;
     it("create group", async function () {
       await writer.createGroup(charlie.address, validGroup);
@@ -286,7 +292,7 @@ describe("GxCertCacheManager", () => {
     });
   });
   describe("get user certs", () => {
-    const manager = new GxCertCacheManager([client]);
+    const manager = new GxCertCacheManager([client], ipfsConfig);
     it("create cert", async function () {
       const signedCert = await client.signCertificate(validCert, {
         privateKey: alice.privateKey,
@@ -645,7 +651,7 @@ describe("GxCertCacheManager", () => {
     });
   });
   describe("getGroupCerts", () => {
-    const manager = new GxCertCacheManager([client]);
+    const manager = new GxCertCacheManager([client], ipfsConfig);
     it("get", async function () {
       const certs = await manager.getGroupCerts(groupId, nullFunc, [
         {
