@@ -30,7 +30,13 @@ const charlie = {
   privateKey,
 };
 const writer = new GxCertWriter(web3, contractAddress, privateKey, common);
-const client = new GxCertClient(web3, contractAddress);
+const client = new GxCertClient(web3, contractAddress, null,
+  {
+    host: "ipfs.infura.io",
+    port: 5001,
+    protocol: "https",
+  }
+);
 
 let validProfile = {
   name: "alice",
