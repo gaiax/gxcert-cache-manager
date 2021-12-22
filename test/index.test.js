@@ -1,5 +1,5 @@
 const rpcHost = "https://matic-mumbai.chainstacklabs.com";
-const contractAddress = "0x38c009E363f7AcAEf5a29674192EF5edBe8cFE3f";
+const contractAddress = "0xA7decdC6c8FbE55478b9184b62C910Bdb4cb5E20";
 
 const fs = require("fs");
 const privateKey = fs.readFileSync(__dirname + "/../.privkey", "utf8").trim();
