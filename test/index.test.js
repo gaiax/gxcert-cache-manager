@@ -1,5 +1,5 @@
 const rpcHost = "https://matic-mumbai.chainstacklabs.com";
-const contractAddress = "0xA7decdC6c8FbE55478b9184b62C910Bdb4cb5E20";
+const contractAddress = "0x93A62c0bDF73cB2843453daA55890E5f4Fae2A57";
 
 const fs = require("fs");
 const privateKey = fs.readFileSync(__dirname + "/../.privkey", "utf8").trim();
@@ -32,21 +32,20 @@ const charlie = {
 const writer = new GxCertWriter(web3, contractAddress, privateKey, common);
 const client = new GxCertClient(web3, contractAddress, null,
   {
-    host: "ipfs.infura.io",
+    host: "ipfs.gaiax-blockchain.com",
     port: 5001,
-    protocol: "https",
-  }
+    protocol: "http",
+  },
+  "http://ipfs.gaiax-blockchain.com:8080/ipfs"
 );
 
 let validProfile = {
   name: "alice",
-  email: "alice@example.com",
   icon: "QmYRBkuxi46tLdFrALkAm1qYztBfNQGKRsQK5UsT9dEMaW",
 };
 
 let bobProfile = {
   name: "bob",
-  email: "bob@example.com",
   icon: "QmYRBkuxi46tLdFrALkAm1qYztBfNQGKRsQK5UsT9dEMaW",
 };
 
@@ -54,7 +53,6 @@ let validGroup = {
   name: "group1",
   residence: "residence",
   phone: "phone",
-  member: alice.address,
 };
 let validCert = {
   context: {},
@@ -106,7 +104,6 @@ describe("GxCertCacheManager", () => {
         },
       ]);
       assert.equal(profile.name, validProfile.name);
-      assert.equal(profile.email, validProfile.email);
       assert.equal(profile.icon, validProfile.icon);
     });
     it("with image", async function () {
@@ -118,7 +115,6 @@ describe("GxCertCacheManager", () => {
         },
       ]);
       assert.equal(profile.name, validProfile.name);
-      assert.equal(profile.email, validProfile.email);
       assert.equal(profile.icon, validProfile.icon);
     });
     it("cache", async function () {
@@ -131,7 +127,6 @@ describe("GxCertCacheManager", () => {
       ]);
       const newProfile = {
         name: "newName",
-        email: "new@example.com",
         icon: validProfile.icon,
       };
       const signedProfile = await client.signProfileForUpdating(newProfile, {
@@ -145,7 +140,6 @@ describe("GxCertCacheManager", () => {
         },
       ]);
       assert.equal(_profile.name, profile.name);
-      assert.equal(_profile.email, profile.email);
       assert.equal(_profile.icon, profile.icon);
 
       _profile = await manager.getProfile(alice.address, nullFunc, [
@@ -156,7 +150,6 @@ describe("GxCertCacheManager", () => {
       ]);
 
       assert.equal(_profile.name, newProfile.name);
-      assert.equal(_profile.email, newProfile.email);
       assert.equal(_profile.icon, newProfile.icon);
       validProfile = _profile;
     });
@@ -165,7 +158,10 @@ describe("GxCertCacheManager", () => {
     const manager = new GxCertCacheManager([client], ipfsConfig);
     let newGroup;
     it("create group", async function () {
-      await writer.createGroup(charlie.address, validGroup);
+      const signedGroup = await client.signGroup(validGroup, alice.address, {
+        privateKey: alice.privateKey
+      });
+      await writer.createGroup(charlie.address, signedGroup);
     });
     it("get", async function () {
       const groups = await manager.getGroups(alice.address, nullFunc, [
@@ -197,7 +193,7 @@ describe("GxCertCacheManager", () => {
         residence: "newResidence",
         phone: "newPhone",
       };
-      const signedGroup = await client.signGroup(newGroup, {
+      const signedGroup = await client.signGroupForUpdating(newGroup, {
         privateKey: alice.privateKey,
       });
       await writer.updateGroup(charlie.address, signedGroup);
@@ -412,7 +408,6 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.group.residence, validGroup.residence);
       assert.equal(userCert.certificate.group.phone, validGroup.phone);
       assert.equal(userCert.toProfile.name, bobProfile.name);
-      assert.equal(userCert.toProfile.email, bobProfile.email);
       assert.equal(userCert.toProfile.icon, bobProfile.icon);
     });
     it("get issued user certs(no refresh)", async function () {
@@ -567,7 +562,6 @@ describe("GxCertCacheManager", () => {
       assert.equal(userCert.certificate.group.residence, validGroup.residence);
       assert.equal(userCert.certificate.group.phone, validGroup.phone);
       assert.equal(userCert.toProfile.name, bobProfile.name);
-      assert.equal(userCert.toProfile.email, bobProfile.email);
       assert.equal(userCert.toProfile.icon, bobProfile.icon);
       manager.setMainClient(client);
     });
